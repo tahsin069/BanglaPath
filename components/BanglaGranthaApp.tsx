@@ -76,10 +76,10 @@ export default function BanglaGranthaApp() {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [narratorPersona, setNarratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [ambientTanpura, setAmbientTanpura] = useState<boolean>(true);
+  const [ambientTanpura, setAmbientTanpura] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [engineNotice, setEngineNotice] = useState<string>(
-    'গভীর প্রশান্ত ব্যারিটোন কণ্ঠ প্রস্তুত · Soothing Deep Male Baritone Narrator Ready (বাংলা ও English)'
+    'প্রমিত বাংলা পুরুষ কণ্ঠ প্রস্তুত · Native Bengali Male Narrator Ready (ভাস্কর ও প্রদীপ)'
   );
 
   // Federated E-Book Source Search State
@@ -459,6 +459,7 @@ export default function BanglaGranthaApp() {
           body: JSON.stringify({
             text,
             lang,
+            persona: activePersona,
             voiceName: preset.geminiVoice,
             style: `${preset.descriptionEn} ${chapterNote}`,
           }),
@@ -469,27 +470,21 @@ export default function BanglaGranthaApp() {
         setIsLoadingAudio(false);
 
         if (data.audioBase64 && !data.fallback) {
-          startTanpuraDrone();
-          playArchivalBellNote();
+          if (ambientTanpura) {
+            startTanpuraDrone();
+          }
 
           setEngineNotice(
             lang === 'bn'
-              ? `গভীর ব্যারিটোন কণ্ঠে বাংলা পাঠ চলছে · Ch ${chNumber} (${bookForVoice.narratorNameBn}) · Passage 0${paraIdx + 1}`
-              : `Playing ${preset.labelEn} · Ch ${chNumber} (${bookForVoice.narratorNameEn}) · Passage 0${paraIdx + 1}`
+              ? `প্রমিত বাংলা পুরুষ কণ্ঠে পাঠ চলছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              : `Playing ${preset.labelEn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
-          // Primary playback through Web Audio Baritone WSOLA + 5-Stage Chest Resonance Mastering Chain
           try {
-            const AudioContextClass =
-              window.AudioContext ||
-              (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-            if (!audioCtxRef.current) {
-              audioCtxRef.current = new AudioContextClass();
-            }
             const controller = await playBaritoneMasteredAudio({
-              audioCtx: audioCtxRef.current,
               audioBase64: data.audioBase64,
-              engine: data.engine || 'cloud-bilingual-tts',
+              mimeType: data.mimeType || 'audio/mpeg',
+              engine: data.engine || 'neural-studio-male-96k',
               persona: activePersona,
               playbackSpeed,
               isMuted,
@@ -507,17 +502,11 @@ export default function BanglaGranthaApp() {
             baritoneControllerRef.current = controller;
             return;
           } catch {
-            // Fallback to HTMLAudioElement with natural baritone pitch lowering
             const audio = new Audio(
-              `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`
+              `data:${data.mimeType || 'audio/mpeg'};base64,${data.audioBase64}`
             );
-            (audio as any).preservesPitch = false;
-            (audio as any).mozPreservesPitch = false;
-            (audio as any).webkitPreservesPitch = false;
-            audio.playbackRate =
-              data.engine === 'cloud-bilingual-tts'
-                ? Math.max(0.76, playbackSpeed * 0.82)
-                : playbackSpeed * preset.baseTempoMultiplier;
+            (audio as any).preservesPitch = true;
+            audio.playbackRate = playbackSpeed;
             audio.muted = isMuted;
             htmlAudioRef.current = audio;
 
@@ -542,8 +531,9 @@ export default function BanglaGranthaApp() {
 
       // Offline / Browser SpeechSynthesis Baritone Fallback
       if (sessionId !== playbackSessionRef.current) return;
-      startTanpuraDrone();
-      playArchivalBellNote();
+      if (ambientTanpura) {
+        startTanpuraDrone();
+      }
 
       if (typeof window !== 'undefined' && 'speechSynthesis' in window && !isMuted) {
         try {
@@ -624,7 +614,7 @@ export default function BanglaGranthaApp() {
 
       onComplete();
     },
-    [isMuted, narratorPersona, playArchivalBellNote, playbackSpeed, startTanpuraDrone]
+    [ambientTanpura, isMuted, narratorPersona, playbackSpeed, startTanpuraDrone]
   );
 
   /**
@@ -2037,14 +2027,14 @@ export default function BanglaGranthaApp() {
                   </div>
                 </div>
 
-                {/* SOOTHING DEEP MALE NARRATOR TIMBRE SELECTOR */}
+                {/* NATIVE BANGLA & ENGLISH MALE NARRATOR SELECTOR */}
                 <div className="mt-4 pt-3 border-t border-stone-200/80">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">
-                      Story Narrator Voice (গভীর পুরুষ কণ্ঠস্বর)
+                      Native Bangla Male Narrator (প্রমিত বাংলা পুরুষ কণ্ঠ)
                     </p>
                     <span className="text-[11px] text-[#9A3412] font-medium">
-                      Baritone Studio Mastered
+                      24kHz Native Neural
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#E5DEC9] rounded-lg">
@@ -2052,18 +2042,18 @@ export default function BanglaGranthaApp() {
                       [
                         {
                           id: 'deep-baritone',
-                          shortEn: 'Deep Baritone',
-                          shortBn: 'গভীর ব্যারিটোন',
+                          shortEn: 'Bashkar (Calcutta)',
+                          shortBn: 'ভাস্কর · কলকাতা কণ্ঠ',
                         },
                         {
                           id: 'warm-storyteller',
-                          shortEn: 'Warm Male',
-                          shortBn: 'স্নিগ্ধ পুরুষ কণ্ঠ',
+                          shortEn: 'Pradeep (Dhaka)',
+                          shortBn: 'প্রদীপ · ঢাকা কণ্ঠ',
                         },
                         {
                           id: 'resonant-bass',
-                          shortEn: 'Resonant Bass',
-                          shortBn: 'গম্ভীর ব্যারিটোন',
+                          shortEn: 'Poetic Recitation',
+                          shortBn: 'ধীরস্থির কাব্যিক কণ্ঠ',
                         },
                       ] as const
                     ).map((v) => {
