@@ -135,7 +135,6 @@ async function openAndSynthesizeOnce(
   },
   retryOnClockSkew = true
 ): Promise<Buffer> {
-  // eslint-disable-next-line no-eval
   const WebSocketClient = eval('require')('ws');
 
   const connId = crypto.randomBytes(16).toString('hex');

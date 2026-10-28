@@ -106,6 +106,16 @@ export default function BanglaGranthaApp() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const readerSectionRef = useRef<HTMLElement | null>(null);
   const playbackSessionRef = useRef<number>(0);
+  const customBookCounterRef = useRef<number>(1);
+  const startPlaybackRef = useRef<
+    | ((
+        targetParaIdx?: number,
+        overrideLangMode?: AudioLanguageMode,
+        targetChapterIdx?: number,
+        bookOverride?: BengaliBook
+      ) => void)
+    | null
+  >(null);
 
   const activeBook = books.find((b) => b.id === activeBookId) || books[0];
   const activeChapter = activeBook.chapters[activeChapterIdx] || activeBook.chapters[0];
@@ -118,13 +128,13 @@ export default function BanglaGranthaApp() {
 
   // Load URL deep-link params (?book=...&chapter=...&lang=...) or saved progress from localStorage
   useEffect(() => {
-    try {
-      const savedBookmarks = localStorage.getItem('banglagrantha_bookmarks');
-      if (savedBookmarks) {
-        setBookmarks(JSON.parse(savedBookmarks));
-      }
+    const hydrateTimer = window.setTimeout(() => {
+      try {
+        const savedBookmarks = localStorage.getItem('banglagrantha_bookmarks');
+        if (savedBookmarks) {
+          setBookmarks(JSON.parse(savedBookmarks));
+        }
 
-      if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlBook = params.get('book');
         const urlChapter = params.get('chapter');
@@ -141,23 +151,25 @@ export default function BanglaGranthaApp() {
           }
           return;
         }
-      }
 
-      const savedProgressRaw = localStorage.getItem('banglagrantha_progress');
-      if (savedProgressRaw) {
-        const saved: SavedProgress = JSON.parse(savedProgressRaw);
-        if (CURATED_BENGALI_BOOKS.some((b) => b.id === saved.bookId)) {
-          setActiveBookId(saved.bookId);
-          setActiveChapterIdx(saved.chapterIndex || 0);
-          setActiveParagraphIdx(saved.paragraphIndex || 0);
-          if (saved.audioLangMode) {
-            setAudioLangMode(saved.audioLangMode);
+        const savedProgressRaw = localStorage.getItem('banglagrantha_progress');
+        if (savedProgressRaw) {
+          const saved: SavedProgress = JSON.parse(savedProgressRaw);
+          if (CURATED_BENGALI_BOOKS.some((b) => b.id === saved.bookId)) {
+            setActiveBookId(saved.bookId);
+            setActiveChapterIdx(saved.chapterIndex || 0);
+            setActiveParagraphIdx(saved.paragraphIndex || 0);
+            if (saved.audioLangMode) {
+              setAudioLangMode(saved.audioLangMode);
+            }
           }
         }
+      } catch {
+        // Ignore storage errors
       }
-    } catch {
-      // Ignore storage errors
-    }
+    }, 0);
+
+    return () => window.clearTimeout(hydrateTimer);
   }, []);
 
   // Persist current reading/listening state & sync shareable query parameters
@@ -644,7 +656,7 @@ export default function BanglaGranthaApp() {
           setActiveChapterIdx(nextChIdx);
           setActiveParagraphIdx(0);
           setElapsedSeconds(0);
-          startPlayback(0, modeToUse, nextChIdx, currentBook);
+          startPlaybackRef.current?.(0, modeToUse, nextChIdx, currentBook);
           return;
         }
         setIsPlaying(false);
@@ -672,11 +684,11 @@ export default function BanglaGranthaApp() {
       const advanceToNextPassageOrChapter = () => {
         if (sessionId !== playbackSessionRef.current) return;
         if (targetParaIdx + 1 < maxLen) {
-          startPlayback(targetParaIdx + 1, modeToUse, targetChapterIdx, currentBook);
+          startPlaybackRef.current?.(targetParaIdx + 1, modeToUse, targetChapterIdx, currentBook);
         } else if (continuousBookPlay && targetChapterIdx + 1 < currentBook.chapters.length) {
           const nextChIdx = targetChapterIdx + 1;
           setElapsedSeconds(0);
-          startPlayback(0, modeToUse, nextChIdx, currentBook);
+          startPlaybackRef.current?.(0, modeToUse, nextChIdx, currentBook);
         } else {
           setIsPlaying(false);
           stopAllAudio();
@@ -743,6 +755,10 @@ export default function BanglaGranthaApp() {
       stopAllAudio,
     ]
   );
+
+  useEffect(() => {
+    startPlaybackRef.current = startPlayback;
+  }, [startPlayback]);
 
   const togglePlayPause = () => {
     if (isPlaying) {
@@ -866,8 +882,11 @@ export default function BanglaGranthaApp() {
     e.preventDefault();
     if (!newTitleBn.trim() && !newTitleEn.trim()) return;
 
+    customBookCounterRef.current += 1;
+    const seqId = customBookCounterRef.current;
+
     const customBook: BengaliBook = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${books.length + 1}-${seqId}`,
       accessionNumber: `BG-2026-USR-${books.length + 1}`,
       titleBn: newTitleBn.trim() || newTitleEn.trim(),
       titleEn: newTitleEn.trim() || newTitleBn.trim(),
@@ -902,7 +921,7 @@ export default function BanglaGranthaApp() {
       firstEditionPress: 'BanglaGrantha Open Press',
       chapters: [
         {
-          id: `custom-ch-1-${Date.now()}`,
+          id: `custom-ch-1-${seqId}`,
           number: 1,
           titleBn: `প্রথম অধ্যায় — ${newTitleBn || newTitleEn}`,
           titleEn: `Chapter I · ${newTitleEn || newTitleBn}`,
