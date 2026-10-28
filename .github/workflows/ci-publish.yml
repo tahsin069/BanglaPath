@@ -8,27 +8,25 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_ENV: production
+  NEXT_TELEMETRY_DISABLED: '1'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-and-verify:
     name: Typecheck, Lint & Build Next.js App
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run TypeScript type check
-        run: npm run typecheck
+      - name: Install dependencies (including devDependencies)
+        run: npm install --include=dev
 
       - name: Run ESLint
         run: npm run lint
@@ -37,3 +35,7 @@ jobs:
         env:
           APP_URL: https://banglagrantha.org
         run: npm run build
+
+      - name: Run TypeScript type check
+        run: npm run typecheck
+
