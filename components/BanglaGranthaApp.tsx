@@ -16,7 +16,9 @@ import {
   BookmarkCheck,
   Plus,
   ListMusic,
-  Sparkles,
+  Share2,
+  Check,
+  FileDown,
 } from 'lucide-react';
 import {
   GENRE_CATEGORIES,
@@ -27,6 +29,7 @@ import {
   GenreId,
 } from '@/lib/bengali-catalog';
 import { BookCoverArt } from '@/components/BookCoverArt';
+import { PWAInstallButton, OfflineIndicator } from '@/components/PWAInstallButton';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
@@ -59,6 +62,7 @@ export default function BanglaGranthaApp() {
   const [paperTheme, setPaperTheme] = useState<PaperTheme>('alabaster');
   const [fontSizeStep, setFontSizeStep] = useState<number>(1);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
 
   // Audiobook Playback State
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -105,17 +109,37 @@ export default function BanglaGranthaApp() {
     0
   );
 
-  // Load saved progress & bookmarks from localStorage
+  // Load URL deep-link params (?book=...&chapter=...&lang=...) or saved progress from localStorage
   useEffect(() => {
     try {
       const savedBookmarks = localStorage.getItem('banglagrantha_bookmarks');
       if (savedBookmarks) {
         setBookmarks(JSON.parse(savedBookmarks));
       }
+
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const urlBook = params.get('book');
+        const urlChapter = params.get('chapter');
+        const urlLang = params.get('lang') as AudioLanguageMode | null;
+
+        if (urlBook && CURATED_BENGALI_BOOKS.some((b) => b.id === urlBook)) {
+          setActiveBookId(urlBook);
+          if (urlChapter) {
+            const chNum = Math.max(0, parseInt(urlChapter, 10) - 1);
+            setActiveChapterIdx(isNaN(chNum) ? 0 : chNum);
+          }
+          if (urlLang && ['bn', 'en', 'bilingual'].includes(urlLang)) {
+            setAudioLangMode(urlLang);
+          }
+          return;
+        }
+      }
+
       const savedProgressRaw = localStorage.getItem('banglagrantha_progress');
       if (savedProgressRaw) {
         const saved: SavedProgress = JSON.parse(savedProgressRaw);
-        if (books.some((b) => b.id === saved.bookId)) {
+        if (CURATED_BENGALI_BOOKS.some((b) => b.id === saved.bookId)) {
           setActiveBookId(saved.bookId);
           setActiveChapterIdx(saved.chapterIndex || 0);
           setActiveParagraphIdx(saved.paragraphIndex || 0);
@@ -129,7 +153,7 @@ export default function BanglaGranthaApp() {
     }
   }, []);
 
-  // Persist current reading/listening state
+  // Persist current reading/listening state & sync shareable query parameters
   useEffect(() => {
     try {
       const payload: SavedProgress = {
@@ -140,10 +164,89 @@ export default function BanglaGranthaApp() {
         timestamp: Date.now(),
       };
       localStorage.setItem('banglagrantha_progress', JSON.stringify(payload));
+
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('book', activeBookId);
+        url.searchParams.set('chapter', String(activeChapterIdx + 1));
+        url.searchParams.set('lang', audioLangMode);
+        window.history.replaceState({}, '', url.toString());
+      }
     } catch {
       // Ignore storage errors
     }
   }, [activeBookId, activeChapterIdx, activeParagraphIdx, audioLangMode]);
+
+  // Copy Shareable Deep Link to Clipboard
+  const handleShareCurrentBook = async () => {
+    if (typeof window === 'undefined') return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?book=${encodeURIComponent(
+      activeBookId
+    )}&chapter=${activeChapterIdx + 1}&lang=${audioLangMode}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${activeBook.titleBn} (${activeBook.titleEn}) — BanglaGrantha`,
+          text: `Read and listen to ${activeBook.titleBn} by ${activeBook.authorEn} in Bengali & English on BanglaGrantha.`,
+          url: shareUrl,
+        });
+        return;
+      }
+    } catch {
+      // Fall back to clipboard copy
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2500);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Download Full Unabridged Bilingual Edition (.md) for Offline Reading
+  const handleDownloadBilingualEdition = () => {
+    const lines: string[] = [
+      `# ${activeBook.titleBn} — ${activeBook.titleEn}`,
+      `**Author:** ${activeBook.authorBn} (${activeBook.authorEn})`,
+      `**First Published:** ${activeBook.publishedYear} · **Genre:** ${activeBook.genreLabelEn}`,
+      `**Archive Accession:** ${activeBook.accessionNumber} · **Source:** ${activeBook.sourceName}`,
+      '',
+      `> ${activeBook.synopsisBn}`,
+      `> ${activeBook.synopsisEn}`,
+      '',
+      '---',
+      '',
+    ];
+
+    activeBook.chapters.forEach((ch) => {
+      lines.push(`## ${ch.titleBn}`);
+      lines.push(`### ${ch.titleEn}`);
+      lines.push('');
+      ch.paragraphsBn.forEach((pBn, idx) => {
+        lines.push(pBn);
+        lines.push('');
+        if (ch.paragraphsEn[idx]) {
+          lines.push(`*${ch.paragraphsEn[idx]}*`);
+          lines.push('');
+        }
+      });
+      lines.push('---');
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeBook.id}-unabridged-bilingual.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Stop all audio helper
   const stopAllAudio = useCallback(() => {
@@ -254,7 +357,7 @@ export default function BanglaGranthaApp() {
    */
   const loadMoreUnabridgedChapters = useCallback(
     async (bookToExpand: BengaliBook, autoPlayFirstNew = false) => {
-      if (isExpandingChapters) return;
+      if (isExpandingChapters) return null;
       setIsExpandingChapters(true);
       const nextChapterNum = bookToExpand.chapters.length + 1;
       setEngineNotice(
@@ -447,8 +550,7 @@ export default function BanglaGranthaApp() {
   );
 
   /**
-   * Starts continuous unabridged playback across all passages AND all chapters of the book!
-   * When a chapter finishes, automatically advances to the next chapter (or loads new chapters).
+   * Starts continuous unabridged playback across all passages AND all chapters of the book.
    */
   const startPlayback = useCallback(
     (
@@ -468,9 +570,7 @@ export default function BanglaGranthaApp() {
       const paragraphsEn = chapterToUse.paragraphsEn;
       const maxLen = Math.max(paragraphsBn.length, paragraphsEn.length);
 
-      // If we reached the end of the current chapter:
       if (targetParaIdx >= maxLen) {
-        // Auto-advance to the next chapter if continuous book playback is enabled!
         if (continuousBookPlay && targetChapterIdx + 1 < currentBook.chapters.length) {
           const nextChIdx = targetChapterIdx + 1;
           setActiveChapterIdx(nextChIdx);
@@ -491,7 +591,6 @@ export default function BanglaGranthaApp() {
       setActiveParagraphIdx(targetParaIdx);
       setIsPlaying(true);
 
-      // Start elapsed time counter
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) =>
@@ -507,7 +606,6 @@ export default function BanglaGranthaApp() {
         if (targetParaIdx + 1 < maxLen) {
           startPlayback(targetParaIdx + 1, modeToUse, targetChapterIdx, currentBook);
         } else if (continuousBookPlay && targetChapterIdx + 1 < currentBook.chapters.length) {
-          // Seamlessly advance to Chapter N+1, Passage 0!
           const nextChIdx = targetChapterIdx + 1;
           setElapsedSeconds(0);
           startPlayback(0, modeToUse, nextChIdx, currentBook);
@@ -543,7 +641,6 @@ export default function BanglaGranthaApp() {
           advanceToNextPassageOrChapter
         );
       } else {
-        // Bilingual Alternating Mode: First narrate in Bengali (bn), then narrate in English (en)!
         playSingleLanguageSegment(
           textBn,
           'bn',
@@ -589,7 +686,7 @@ export default function BanglaGranthaApp() {
     }
   };
 
-  // Switch audio language on the fly (and immediately re-narrate current passage if playing)
+  // Switch audio language on the fly
   const handleSelectAudioLanguage = (newMode: AudioLanguageMode, forceStart = false) => {
     setAudioLangMode(newMode);
     if (isPlaying || forceStart) {
@@ -822,6 +919,8 @@ export default function BanglaGranthaApp() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#1C1917] font-[family-name:var(--font-body)] pb-24">
+      <OfflineIndicator />
+
       {/* STRICT 3-ZONE TOP BAR CONTRACT */}
       <header className="sticky top-0 z-40 flex items-center justify-between gap-8 px-6 lg:px-12 py-4 bg-[#FBF9F5]/95 backdrop-blur-sm border-b border-stone-200">
         {/* Zone 1: Single text element wordmark */}
@@ -892,7 +991,7 @@ export default function BanglaGranthaApp() {
               <span aria-hidden="true">·</span>
               <span>Unabridged Multi-Chapter Bengali &amp; English Audiobooks</span>
               <span aria-hidden="true">·</span>
-              <span>Continuous Auto-Advance Playback</span>
+              <span>Installable Cross-Device Web App</span>
             </div>
             <div className="flex items-center gap-2 font-[family-name:var(--font-mono)] tabular-nums text-stone-500">
               <span>বাংলা অডিও (BN)</span>
@@ -932,7 +1031,7 @@ export default function BanglaGranthaApp() {
                 </p>
               </div>
 
-              {/* Hero Actions & Quick Genre Jump */}
+              {/* Hero Actions & PWA Install Prompt */}
               <div className="mt-8 pt-6 border-t border-stone-200">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -954,6 +1053,9 @@ export default function BanglaGranthaApp() {
                     <Headphones className="w-4 h-4" />
                     <span>Play Full Book in English</span>
                   </button>
+
+                  {/* Mandatory In-App PWA Install Button */}
+                  <PWAInstallButton />
                 </div>
 
                 <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-stone-500">
@@ -1064,6 +1166,42 @@ export default function BanglaGranthaApp() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Full-Width 4-Column Archival Metrics Strip */}
+          <div className="mt-10 pt-8 border-t border-stone-200 grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <p className="text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-semibold text-stone-900 tabular-nums">
+                148,100+
+              </p>
+              <p className="mt-1 text-xs text-stone-600">
+                Indexed Bengali Monographs &amp; Periodicals Across Connected Sources
+              </p>
+            </div>
+            <div>
+              <p className="text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-semibold text-stone-900 tabular-nums">
+                বাংলা + English
+              </p>
+              <p className="mt-1 text-xs text-stone-600">
+                Every Book Equipped with Continuous Multi-Chapter Bilingual Audiobooks
+              </p>
+            </div>
+            <div>
+              <p className="text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-semibold text-stone-900 tabular-nums">
+                6 Literary Genres
+              </p>
+              <p className="mt-1 text-xs text-stone-600">
+                Upanyas, Kabita, Chhotogolpo, Rahasya &amp; Kalpabigyan, Prabandha, Shishu
+              </p>
+            </div>
+            <div>
+              <p className="text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-semibold text-stone-900 tabular-nums">
+                PWA &amp; Offline
+              </p>
+              <p className="mt-1 text-xs text-stone-600">
+                Installable on Desktop, iOS &amp; Android with Deep-Link Sharing &amp; Export
+              </p>
             </div>
           </div>
         </div>
@@ -1376,8 +1514,8 @@ export default function BanglaGranthaApp() {
               </div>
             </div>
 
-            {/* Interactive Script Mode & Surface Theme Controls */}
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Interactive Script Mode, Theme, Share & Offline Export Controls */}
+            <div className="flex flex-wrap items-center gap-2.5">
               {/* Script Selector */}
               <div className="flex items-center gap-1 p-1 bg-[#EBE6DF] rounded-lg">
                 <button
@@ -1389,7 +1527,7 @@ export default function BanglaGranthaApp() {
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
-                  Parallel Text (বাংলা + EN)
+                  Parallel (বাংলা + EN)
                 </button>
                 <button
                   type="button"
@@ -1469,6 +1607,34 @@ export default function BanglaGranthaApp() {
                   A+
                 </button>
               </div>
+
+              {/* Share Link & Offline Export Buttons */}
+              <button
+                type="button"
+                onClick={handleShareCurrentBook}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-stone-800 bg-[#FBF9F5] border border-stone-300 hover:border-[#9A3412] rounded-lg transition-colors whitespace-nowrap"
+              >
+                {copiedShareLink ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#9A3412]" />
+                    <span>Link Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share Book</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadBilingualEdition}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-stone-800 bg-[#FBF9F5] border border-stone-300 hover:border-stone-900 rounded-lg transition-colors whitespace-nowrap"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                <span>Download Edition</span>
+              </button>
             </div>
           </div>
 
@@ -1677,7 +1843,7 @@ export default function BanglaGranthaApp() {
                 })}
               </div>
 
-              {/* Bottom Chapter Navigation Footer (Previous Chapter / Next Chapter / Expand Book) */}
+              {/* Bottom Chapter Navigation Footer */}
               <div
                 className={`mt-10 pt-6 border-t ${currentPaper.border} flex flex-wrap items-center justify-between gap-4`}
               >
@@ -1695,7 +1861,9 @@ export default function BanglaGranthaApp() {
                   ← Previous Chapter
                 </button>
 
-                <span className={`text-xs font-[family-name:var(--font-mono)] tabular-nums ${currentPaper.muted}`}>
+                <span
+                  className={`text-xs font-[family-name:var(--font-mono)] tabular-nums ${currentPaper.muted}`}
+                >
                   Chapter {activeChapter.number} of {activeBook.chapters.length}
                 </span>
 
@@ -1749,7 +1917,7 @@ export default function BanglaGranthaApp() {
                   </span>
                 </div>
 
-                {/* AUDIO LANGUAGE SELECTOR (BENGALI / ENGLISH / BILINGUAL) */}
+                {/* AUDIO LANGUAGE SELECTOR */}
                 <div className="mt-4">
                   <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold mb-2">
                     Select Audiobook Narration Language (অডিও ভাষা)
@@ -1838,13 +2006,15 @@ export default function BanglaGranthaApp() {
                       if (activeParagraphIdx > 0) {
                         const prevIdx = activeParagraphIdx - 1;
                         setActiveParagraphIdx(prevIdx);
-                        if (isPlaying) startPlayback(prevIdx, audioLangMode, activeChapterIdx, activeBook);
+                        if (isPlaying)
+                          startPlayback(prevIdx, audioLangMode, activeChapterIdx, activeBook);
                       } else if (activeChapterIdx > 0) {
                         const prevCh = activeChapterIdx - 1;
                         const lastPara = activeBook.chapters[prevCh].paragraphsBn.length - 1;
                         setActiveChapterIdx(prevCh);
                         setActiveParagraphIdx(lastPara);
-                        if (isPlaying) startPlayback(lastPara, audioLangMode, prevCh, activeBook);
+                        if (isPlaying)
+                          startPlayback(lastPara, audioLangMode, prevCh, activeBook);
                       }
                     }}
                     aria-label="Previous passage or chapter"
@@ -1864,7 +2034,13 @@ export default function BanglaGranthaApp() {
                       {isLoadingAudio
                         ? 'Synthesizing Audio...'
                         : isPlaying
-                        ? `Pause (${audioLangMode === 'bn' ? 'বাংলা' : audioLangMode === 'en' ? 'English' : 'বাংলা+EN'})`
+                        ? `Pause (${
+                            audioLangMode === 'bn'
+                              ? 'বাংলা'
+                              : audioLangMode === 'en'
+                              ? 'English'
+                              : 'বাংলা+EN'
+                          })`
                         : `Play Unabridged (${
                             audioLangMode === 'bn'
                               ? 'বাংলা'
@@ -1881,7 +2057,8 @@ export default function BanglaGranthaApp() {
                       if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
                         const nextIdx = activeParagraphIdx + 1;
                         setActiveParagraphIdx(nextIdx);
-                        if (isPlaying) startPlayback(nextIdx, audioLangMode, activeChapterIdx, activeBook);
+                        if (isPlaying)
+                          startPlayback(nextIdx, audioLangMode, activeChapterIdx, activeBook);
                       } else if (activeChapterIdx + 1 < activeBook.chapters.length) {
                         const nextCh = activeChapterIdx + 1;
                         setActiveChapterIdx(nextCh);
@@ -2183,7 +2360,7 @@ export default function BanglaGranthaApp() {
               Preserving classic and contemporary Bengali literature with complete multi-chapter Bengali &amp; English audiobooks across all devices.
             </p>
           </div>
-          <div className="flex items-center gap-4 text-stone-500">
+          <div className="flex flex-wrap items-center gap-4 text-stone-500">
             <a href="#catalog" className="hover:text-stone-900 transition-colors">
               Genre Catalog
             </a>
@@ -2194,6 +2371,10 @@ export default function BanglaGranthaApp() {
             <span aria-hidden="true">·</span>
             <a href="#federated-sources" className="hover:text-stone-900 transition-colors">
               Federated Sources
+            </a>
+            <span aria-hidden="true">·</span>
+            <a href="/sitemap.xml" className="hover:text-stone-900 transition-colors">
+              Sitemap
             </a>
           </div>
         </div>
@@ -2235,7 +2416,8 @@ export default function BanglaGranthaApp() {
                 if (activeParagraphIdx > 0) {
                   const prev = activeParagraphIdx - 1;
                   setActiveParagraphIdx(prev);
-                  if (isPlaying) startPlayback(prev, audioLangMode, activeChapterIdx, activeBook);
+                  if (isPlaying)
+                    startPlayback(prev, audioLangMode, activeChapterIdx, activeBook);
                 } else if (activeChapterIdx > 0) {
                   const prevCh = activeChapterIdx - 1;
                   const lastPara = activeBook.chapters[prevCh].paragraphsBn.length - 1;
@@ -2261,7 +2443,8 @@ export default function BanglaGranthaApp() {
                 if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
                   const next = activeParagraphIdx + 1;
                   setActiveParagraphIdx(next);
-                  if (isPlaying) startPlayback(next, audioLangMode, activeChapterIdx, activeBook);
+                  if (isPlaying)
+                    startPlayback(next, audioLangMode, activeChapterIdx, activeBook);
                 } else if (activeChapterIdx + 1 < activeBook.chapters.length) {
                   const nextCh = activeChapterIdx + 1;
                   setActiveChapterIdx(nextCh);
