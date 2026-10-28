@@ -10,6 +10,17 @@ const ai = new GoogleGenAI({
   },
 });
 
+const DEEP_MALE_VOICES = ['Charon', 'Orus', 'Fenrir', 'Puck'] as const;
+type DeepMaleVoice = (typeof DEEP_MALE_VOICES)[number];
+
+function resolveDeepMaleVoice(requested?: string): DeepMaleVoice {
+  if (requested && DEEP_MALE_VOICES.includes(requested as DeepMaleVoice)) {
+    return requested as DeepMaleVoice;
+  }
+  if (requested === 'Zephyr') return 'Orus';
+  return 'Charon';
+}
+
 /**
  * Splits a passage of any length into <= 180-character sentence chunks so the
  * cloud speech stream synthesizes 100% of the Bengali or English text without truncation.
@@ -58,7 +69,7 @@ async function synthesizeCloudFallbackMp3(text: string, lang: 'bn' | 'en'): Prom
 
     const buffers: Buffer[] = [];
     for (const chunk of chunks) {
-      const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(
+      const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&ttsspeed=0.92&q=${encodeURIComponent(
         chunk
       )}`;
       const res = await fetch(url, {
@@ -86,8 +97,8 @@ export async function POST(req: NextRequest) {
     const {
       text,
       lang = 'bn',
-      voiceName = 'Kore',
-      style = 'Warm, expressive literary audiobook narrator',
+      voiceName = 'Charon',
+      style = 'Soothing, deep, resonant, calm manly baritone audiobook narrator',
     } = body;
 
     if (!text || typeof text !== 'string') {
@@ -95,15 +106,14 @@ export async function POST(req: NextRequest) {
     }
 
     const targetLang: 'bn' | 'en' = lang === 'en' ? 'en' : 'bn';
-    const allowedVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
-    const selectedVoice = allowedVoices.includes(voiceName) ? voiceName : 'Kore';
+    const selectedMaleVoice = resolveDeepMaleVoice(voiceName);
 
-    // 1. Primary: Try Gemini 3.8 Flash Lite TTS
+    // 1. Primary: Gemini 3.8 Flash Lite TTS with Deep Male Baritone Voice (Charon / Orus / Fenrir)
     try {
       const languagePrompt =
         targetLang === 'bn'
-          ? `Read the following classic Bengali literary passage aloud in natural, fluent, expressive Bengali (বাংলা): ${text.slice(0, 4000)}`
-          : `Read the following English literary translation aloud in a warm, expressive audiobook voice: ${text.slice(0, 4000)}`;
+          ? `Read the following classic Bengali literary passage aloud in a soothing, deep, calm, resonant manly baritone storyteller voice in natural, fluent Bengali (বাংলা): ${text.slice(0, 4000)}`
+          : `Read the following English literary translation aloud in a soothing, deep, calm, resonant manly baritone storyteller voice with warm chest resonance and unhurried pacing: ${text.slice(0, 4000)}`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash-lite-tts',
@@ -117,8 +127,8 @@ export async function POST(req: NextRequest) {
                 speechMetadata: {
                   style:
                     targetLang === 'bn'
-                      ? `${style}, native Bengali literary pronunciation`
-                      : `${style}, clear English literary cadence`,
+                      ? `${style}, deep soothing male baritone voice, warm chest resonance, unhurried classical Bengali storytelling cadence`
+                      : `${style}, deep soothing male baritone voice, warm chest resonance, calm fireside English literary narration`,
                 },
               },
             ],
@@ -128,7 +138,7 @@ export async function POST(req: NextRequest) {
           responseModalities: ['AUDIO'],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: selectedVoice },
+              prebuiltVoiceConfig: { voiceName: selectedMaleVoice },
             },
           },
         },
@@ -140,22 +150,22 @@ export async function POST(req: NextRequest) {
           audioBase64: base64Audio,
           mimeType: 'audio/wav',
           lang: targetLang,
-          voiceName: selectedVoice,
+          voiceName: selectedMaleVoice,
           engine: 'gemini-3.8-flash-lite-tts',
         });
       }
     } catch {
-      // Fall through to server-side Bengali/English MP3 speech synthesis
+      // Fall through to server-side Bengali/English MP3 speech synthesis + Baritone Studio Transform
     }
 
-    // 2. Secondary Server-Side Fallback: Real spoken Bengali (bn) or English (en) MP3 audio stream for the full text
+    // 2. Secondary Server-Side Stream: Spoken Bengali (bn) or English (en) MP3 mastered by client Baritone WSOLA Engine
     const mp3Base64 = await synthesizeCloudFallbackMp3(text, targetLang);
     if (mp3Base64) {
       return NextResponse.json({
         audioBase64: mp3Base64,
         mimeType: 'audio/mpeg',
         lang: targetLang,
-        voiceName: targetLang === 'bn' ? 'Bangla Cloud Voice (bn-BD)' : 'English Cloud Voice (en-US)',
+        voiceName: selectedMaleVoice,
         engine: 'cloud-bilingual-tts',
       });
     }
@@ -164,7 +174,8 @@ export async function POST(req: NextRequest) {
       {
         fallback: true,
         lang: targetLang,
-        reason: 'Using client browser speech synthesis.',
+        voiceName: selectedMaleVoice,
+        reason: 'Using client baritone speech synthesis.',
       },
       { status: 200 }
     );
@@ -172,7 +183,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         fallback: true,
-        reason: error?.message || 'Using client browser speech synthesis.',
+        reason: error?.message || 'Using client baritone speech synthesis.',
       },
       { status: 200 }
     );

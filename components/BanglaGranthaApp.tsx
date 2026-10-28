@@ -30,6 +30,11 @@ import {
 } from '@/lib/bengali-catalog';
 import { BookCoverArt } from '@/components/BookCoverArt';
 import { PWAInstallButton, OfflineIndicator } from '@/components/PWAInstallButton';
+import {
+  BARITONE_VOICE_PRESETS,
+  MaleNarratorPersona,
+  playBaritoneMasteredAudio,
+} from '@/lib/baritone-audio-engine';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
@@ -69,11 +74,12 @@ export default function BanglaGranthaApp() {
   const [isLoadingAudio, setIsLoadingAudio] = useState<boolean>(false);
   const [isExpandingChapters, setIsExpandingChapters] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
+  const [narratorPersona, setNarratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [ambientTanpura, setAmbientTanpura] = useState<boolean>(true);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [engineNotice, setEngineNotice] = useState<string>(
-    'Full Unabridged Multi-Chapter Audiobook Ready · বাংলা ও English'
+    'গভীর প্রশান্ত ব্যারিটোন কণ্ঠ প্রস্তুত · Soothing Deep Male Baritone Narrator Ready (বাংলা ও English)'
   );
 
   // Federated E-Book Source Search State
@@ -94,6 +100,7 @@ export default function BanglaGranthaApp() {
 
   // Audio Refs
   const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
+  const baritoneControllerRef = useRef<{ stop: () => void } | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const tanpuraGainRef = useRef<GainNode | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -251,6 +258,10 @@ export default function BanglaGranthaApp() {
   // Stop all audio helper
   const stopAllAudio = useCallback(() => {
     playbackSessionRef.current += 1;
+    if (baritoneControllerRef.current) {
+      baritoneControllerRef.current.stop();
+      baritoneControllerRef.current = null;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -414,7 +425,7 @@ export default function BanglaGranthaApp() {
   );
 
   /**
-   * Plays a single passage in the requested language ('bn' or 'en'), resolving when finished.
+   * Plays a single passage in the requested language ('bn' or 'en') using the soothing deep male baritone voice.
    */
   const playSingleLanguageSegment = useCallback(
     async (
@@ -425,16 +436,20 @@ export default function BanglaGranthaApp() {
       bookForVoice: BengaliBook,
       chapterNote: string,
       sessionId: number,
-      onComplete: () => void
+      onComplete: () => void,
+      personaOverride?: MaleNarratorPersona
     ) => {
       if (sessionId !== playbackSessionRef.current) return;
+
+      const activePersona = personaOverride || narratorPersona;
+      const preset = BARITONE_VOICE_PRESETS[activePersona] || BARITONE_VOICE_PRESETS['deep-baritone'];
 
       setCurrentlySpeakingLang(lang);
       setIsLoadingAudio(true);
       setEngineNotice(
         lang === 'bn'
-          ? `বাংলা অডিও প্রস্তুত হচ্ছে · Chapter ${chNumber}, Passage 0${paraIdx + 1}...`
-          : `Synthesizing English Audio · Chapter ${chNumber}, Passage 0${paraIdx + 1}...`
+          ? `গভীর ব্যারিটোন বাংলা অডিও প্রস্তুত হচ্ছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
+          : `Synthesizing ${preset.labelEn} Narration · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
       );
 
       try {
@@ -444,8 +459,8 @@ export default function BanglaGranthaApp() {
           body: JSON.stringify({
             text,
             lang,
-            voiceName: lang === 'bn' ? bookForVoice.narratorVoice : 'Kore',
-            style: chapterNote,
+            voiceName: preset.geminiVoice,
+            style: `${preset.descriptionEn} ${chapterNote}`,
           }),
         });
         const data = await res.json();
@@ -457,38 +472,75 @@ export default function BanglaGranthaApp() {
           startTanpuraDrone();
           playArchivalBellNote();
 
-          const audio = new Audio(
-            `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`
-          );
-          audio.playbackRate = playbackSpeed;
-          audio.muted = isMuted;
-          htmlAudioRef.current = audio;
-
           setEngineNotice(
             lang === 'bn'
-              ? `বাংলা অডিও চলছে · Chapter ${chNumber} (${bookForVoice.narratorNameBn}) · Passage 0${paraIdx + 1}`
-              : `Playing English Narration · Chapter ${chNumber} (${bookForVoice.narratorNameEn}) · Passage 0${paraIdx + 1}`
+              ? `গভীর ব্যারিটোন কণ্ঠে বাংলা পাঠ চলছে · Ch ${chNumber} (${bookForVoice.narratorNameBn}) · Passage 0${paraIdx + 1}`
+              : `Playing ${preset.labelEn} · Ch ${chNumber} (${bookForVoice.narratorNameEn}) · Passage 0${paraIdx + 1}`
           );
 
-          audio.onended = () => {
-            if (sessionId === playbackSessionRef.current) {
-              onComplete();
+          // Primary playback through Web Audio Baritone WSOLA + 5-Stage Chest Resonance Mastering Chain
+          try {
+            const AudioContextClass =
+              window.AudioContext ||
+              (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            if (!audioCtxRef.current) {
+              audioCtxRef.current = new AudioContextClass();
             }
-          };
-          audio.onerror = () => {
-            if (sessionId === playbackSessionRef.current) {
-              onComplete();
-            }
-          };
+            const controller = await playBaritoneMasteredAudio({
+              audioCtx: audioCtxRef.current,
+              audioBase64: data.audioBase64,
+              engine: data.engine || 'cloud-bilingual-tts',
+              persona: activePersona,
+              playbackSpeed,
+              isMuted,
+              onEnded: () => {
+                if (sessionId === playbackSessionRef.current) {
+                  onComplete();
+                }
+              },
+              onError: () => {
+                if (sessionId === playbackSessionRef.current) {
+                  onComplete();
+                }
+              },
+            });
+            baritoneControllerRef.current = controller;
+            return;
+          } catch {
+            // Fallback to HTMLAudioElement with natural baritone pitch lowering
+            const audio = new Audio(
+              `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`
+            );
+            (audio as any).preservesPitch = false;
+            (audio as any).mozPreservesPitch = false;
+            (audio as any).webkitPreservesPitch = false;
+            audio.playbackRate =
+              data.engine === 'cloud-bilingual-tts'
+                ? Math.max(0.76, playbackSpeed * 0.82)
+                : playbackSpeed * preset.baseTempoMultiplier;
+            audio.muted = isMuted;
+            htmlAudioRef.current = audio;
 
-          await audio.play();
-          return;
+            audio.onended = () => {
+              if (sessionId === playbackSessionRef.current) {
+                onComplete();
+              }
+            };
+            audio.onerror = () => {
+              if (sessionId === playbackSessionRef.current) {
+                onComplete();
+              }
+            };
+
+            await audio.play();
+            return;
+          }
         }
       } catch {
         setIsLoadingAudio(false);
       }
 
-      // Offline / Browser SpeechSynthesis fallback
+      // Offline / Browser SpeechSynthesis Baritone Fallback
       if (sessionId !== playbackSessionRef.current) return;
       startTanpuraDrone();
       playArchivalBellNote();
@@ -497,33 +549,59 @@ export default function BanglaGranthaApp() {
         try {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = playbackSpeed;
+          utterance.pitch = preset.browserPitch;
+          utterance.rate = playbackSpeed * preset.baseTempoMultiplier;
           utterance.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
 
           const voices = window.speechSynthesis.getVoices();
+          const maleKeywords = [
+            'male',
+            'prabhat',
+            'bashkar',
+            'tanmoy',
+            'subrata',
+            'rishi',
+            'hemant',
+            'david',
+            'daniel',
+            'george',
+            'guy',
+            'arthur',
+            'oliver',
+            'alex',
+          ];
+
           if (lang === 'bn') {
-            const bnVoice = voices.find(
+            const bnVoices = voices.filter(
               (v) =>
                 v.lang.toLowerCase().includes('bn') ||
                 v.name.toLowerCase().includes('bengali') ||
                 v.name.toLowerCase().includes('bangla')
             );
-            if (bnVoice) {
-              utterance.voice = bnVoice;
-              utterance.lang = bnVoice.lang;
+            const maleBnVoice =
+              bnVoices.find((v) =>
+                maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+              ) || bnVoices[0];
+            if (maleBnVoice) {
+              utterance.voice = maleBnVoice;
+              utterance.lang = maleBnVoice.lang;
             }
           } else {
-            const enVoice = voices.find((v) => v.lang.toLowerCase().startsWith('en'));
-            if (enVoice) {
-              utterance.voice = enVoice;
-              utterance.lang = enVoice.lang;
+            const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
+            const maleEnVoice =
+              enVoices.find((v) =>
+                maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
+              ) || enVoices[0];
+            if (maleEnVoice) {
+              utterance.voice = maleEnVoice;
+              utterance.lang = maleEnVoice.lang;
             }
           }
 
           setEngineNotice(
             lang === 'bn'
-              ? `বাংলা অডিও চলছে · Chapter ${chNumber}, Passage 0${paraIdx + 1}`
-              : `English Audio Active · Chapter ${chNumber}, Passage 0${paraIdx + 1}`
+              ? `গভীর ব্যারিটোন বাংলা অডিও চলছে · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              : `${preset.labelEn} Audio Active · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
           utterance.onend = () => {
@@ -546,7 +624,7 @@ export default function BanglaGranthaApp() {
 
       onComplete();
     },
-    [isMuted, playArchivalBellNote, playbackSpeed, startTanpuraDrone]
+    [isMuted, narratorPersona, playArchivalBellNote, playbackSpeed, startTanpuraDrone]
   );
 
   /**
@@ -816,9 +894,9 @@ export default function BanglaGranthaApp() {
       sourceName: 'BanglaGrantha Community Digitization Studio',
       totalDurationFormatted: '1h 15m',
       totalDurationSeconds: 4500,
-      narratorVoice: 'Kore',
-      narratorNameBn: 'অপর্ণা সেনগুপ্ত (ডিজিটাল পাঠ)',
-      narratorNameEn: 'Aparna Sengupta · Synchronized Audio',
+      narratorVoice: 'Charon',
+      narratorNameBn: 'সৌমিত্র শর্মা (গভীর প্রশান্ত ব্যারিটোন)',
+      narratorNameEn: 'Soumitra Sharma · Deep Soothing Baritone',
       coverMotif: 'gitanjali',
       palette: {
         bg: '#1E293B',
@@ -1956,6 +2034,77 @@ export default function BanglaGranthaApp() {
                     >
                       বাংলা + EN
                     </button>
+                  </div>
+                </div>
+
+                {/* SOOTHING DEEP MALE NARRATOR TIMBRE SELECTOR */}
+                <div className="mt-4 pt-3 border-t border-stone-200/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">
+                      Story Narrator Voice (গভীর পুরুষ কণ্ঠস্বর)
+                    </p>
+                    <span className="text-[11px] text-[#9A3412] font-medium">
+                      Baritone Studio Mastered
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#E5DEC9] rounded-lg">
+                    {(
+                      [
+                        {
+                          id: 'deep-baritone',
+                          shortEn: 'Deep Baritone',
+                          shortBn: 'গভীর ব্যারিটোন',
+                        },
+                        {
+                          id: 'warm-storyteller',
+                          shortEn: 'Warm Male',
+                          shortBn: 'স্নিগ্ধ পুরুষ কণ্ঠ',
+                        },
+                        {
+                          id: 'resonant-bass',
+                          shortEn: 'Resonant Bass',
+                          shortBn: 'গম্ভীর ব্যারিটোন',
+                        },
+                      ] as const
+                    ).map((v) => {
+                      const isSelectedPersona = narratorPersona === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => {
+                            setNarratorPersona(v.id);
+                            const preset = BARITONE_VOICE_PRESETS[v.id];
+                            setEngineNotice(
+                              `${preset.labelBn} নির্বাচিত · ${preset.labelEn} Selected`
+                            );
+                            if (isPlaying) {
+                              stopAllAudio();
+                              setTimeout(() => {
+                                startPlayback(
+                                  activeParagraphIdx,
+                                  audioLangMode,
+                                  activeChapterIdx,
+                                  activeBook
+                                );
+                              }, 60);
+                            }
+                          }}
+                          className={`px-2 py-1.5 text-center rounded-md transition-colors ${
+                            isSelectedPersona
+                              ? 'bg-stone-900 text-white shadow-xs'
+                              : 'text-stone-800 hover:bg-[#FBF9F5]/60'
+                          }`}
+                        >
+                          <span className="block text-[11px] font-medium leading-tight">
+                            {v.shortEn}
+                          </span>
+                          <span className="block text-[10px] opacity-80 font-[family-name:var(--font-bengali)] leading-tight mt-0.5">
+                            {v.shortBn}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

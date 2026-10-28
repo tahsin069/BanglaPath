@@ -70,7 +70,7 @@ export interface BengaliBook {
   sourceName: string;
   totalDurationFormatted: string;
   totalDurationSeconds: number;
-  narratorVoice: 'Kore' | 'Charon' | 'Fenrir' | 'Puck' | 'Zephyr';
+  narratorVoice: 'Charon' | 'Orus' | 'Fenrir' | 'Puck';
   narratorNameBn: string;
   narratorNameEn: string;
   coverMotif: CoverMotif;
@@ -217,8 +217,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '6h 42m',
     totalDurationSeconds: 24120,
     narratorVoice: 'Charon',
-    narratorNameBn: 'সৌমিত্র শর্মা (গভীর কণ্ঠস্বর)',
-    narratorNameEn: 'Soumitra Sharma · Warm Baritone',
+    narratorNameBn: 'সৌমিত্র শর্মা (গভীর প্রশান্ত ব্যারিটোন)',
+    narratorNameEn: 'Soumitra Sharma · Deep Soothing Baritone',
     coverMotif: 'pather_panchali',
     palette: {
       bg: '#1E293B',
@@ -356,9 +356,9 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     sourceName: 'Bichitra Variorum · Indian Press Unabridged Edition',
     totalDurationFormatted: '3h 15m',
     totalDurationSeconds: 11700,
-    narratorVoice: 'Kore',
-    narratorNameBn: 'অপর্ণা সেনগুপ্ত (কাব্যিক আবৃত্তি)',
-    narratorNameEn: 'Aparna Sengupta · Lyrical Recitation',
+    narratorVoice: 'Orus',
+    narratorNameBn: 'দেবব্রত বিশ্বাসী (শান্ত গভীর ব্যারিটোন)',
+    narratorNameEn: 'Debabrata Biswasi · Soothing Velvet Baritone',
     coverMotif: 'gitanjali',
     palette: {
       bg: '#1E3A8A',
@@ -493,8 +493,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '4h 18m',
     totalDurationSeconds: 15480,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'সব্যসাচী সেন (নাটকীয় কণ্ঠ)',
-    narratorNameEn: 'Sabyasachi Sen · Crisp Dramatic Voice',
+    narratorNameBn: 'সব্যসাচী সেন (গম্ভীর নাটকীয় ব্যারিটোন)',
+    narratorNameEn: 'Sabyasachi Sen · Resonant Male Baritone',
     coverMotif: 'sonar_kella',
     palette: {
       bg: '#78350F',
@@ -627,8 +627,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '4h 55m',
     totalDurationSeconds: 17700,
     narratorVoice: 'Charon',
-    narratorNameBn: 'রুদ্রপ্রসাদ মিত্র (ধ্রুপদী পাঠ)',
-    narratorNameEn: 'Rudraprasad Mitra · Classical Resonance',
+    narratorNameBn: 'রুদ্রপ্রসাদ মিত্র (ধ্রুপদী গম্ভীর ব্যারিটোন)',
+    narratorNameEn: 'Rudraprasad Mitra · Deep Classical Baritone',
     coverMotif: 'kapalkundala',
     palette: {
       bg: '#14532D',
@@ -758,9 +758,9 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     sourceName: 'Project Gutenberg & Bengal Women’s Archive',
     totalDurationFormatted: '2h 50m',
     totalDurationSeconds: 10200,
-    narratorVoice: 'Kore',
-    narratorNameBn: 'তাসনিম রহমান (স্পষ্ট ও দীপ্ত কণ্ঠ)',
-    narratorNameEn: 'Tasnim Rahman · Clear Articulate Voice',
+    narratorVoice: 'Orus',
+    narratorNameBn: 'অনির্বাণ চট্টোপাধ্যায় (শান্ত ও স্নিগ্ধ ব্যারিটোন)',
+    narratorNameEn: 'Anirban Chattopadhyay · Warm Soothing Baritone',
     coverMotif: 'sultanas_dream',
     palette: {
       bg: '#312E81',
@@ -888,9 +888,9 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     sourceName: 'U. Ray & Sons Press · Centenary Unabridged Archive',
     totalDurationFormatted: '1h 45m',
     totalDurationSeconds: 6300,
-    narratorVoice: 'Puck',
-    narratorNameBn: 'অনির্বাণ ভট্টাচার্য (ছন্দময় পাঠ)',
-    narratorNameEn: 'Anirban Bhattacharya · Rhythmic Verse',
+    narratorVoice: 'Charon',
+    narratorNameBn: 'পরান বন্দ্যোপাধ্যায় (উষ্ণ ব্যারিটোন ছন্দ)',
+    narratorNameEn: 'Paran Bandyopadhyay · Warm Storyteller Baritone',
     coverMotif: 'abol_tabol',
     palette: {
       bg: '#9A3412',
@@ -1017,8 +1017,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '2h 30m',
     totalDurationSeconds: 9000,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'কাজী আরিফ (তেজস্বী আবৃত্তি)',
-    narratorNameEn: 'Kazi Arif · Heroic Declamation',
+    narratorNameBn: 'কাজী আরিফ (গভীর ওজস্বী ব্যারিটোন)',
+    narratorNameEn: 'Kazi Arif · Deep Resonant Bass-Baritone',
     coverMotif: 'bidrohi',
     palette: {
       bg: '#7F1D1D',
@@ -1140,9 +1140,9 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     sourceName: 'Kabita Bhavan Press · Signet Press Unabridged Archive',
     totalDurationFormatted: '2h 12m',
     totalDurationSeconds: 7920,
-    narratorVoice: 'Zephyr',
-    narratorNameBn: 'শমীক মুখোপাধ্যায় (স্বপ্নময় পাঠ)',
-    narratorNameEn: 'Shamik Mukhopadhyay · Atmospheric Intimate Voice',
+    narratorVoice: 'Orus',
+    narratorNameBn: 'শমীক মুখোপাধ্যায় (স্বপ্নময় গভীর ব্যারিটোন)',
+    narratorNameEn: 'Shamik Mukhopadhyay · Soothing Twilight Baritone',
     coverMotif: 'banalata_sen',
     palette: {
       bg: '#1F2937',
@@ -1267,8 +1267,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '5h 10m',
     totalDurationSeconds: 18600,
     narratorVoice: 'Charon',
-    narratorNameBn: 'দেবেশ রায়চৌধুরী (অন্তরঙ্গ পাঠ)',
-    narratorNameEn: 'Debesh Raychaudhuri · Intimate Storytelling',
+    narratorNameBn: 'দেবেশ রায়চৌধুরী (অন্তরঙ্গ গভীর ব্যারিটোন)',
+    narratorNameEn: 'Debesh Raychaudhuri · Deep Intimate Baritone',
     coverMotif: 'kabuliwala',
     palette: {
       bg: '#44403C',
@@ -1397,8 +1397,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '5h 30m',
     totalDurationSeconds: 19800,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'কৌশিক সেন (বাস্তবধর্মী পাঠ)',
-    narratorNameEn: 'Kaushik Sen · Grounded Dramatic Realism',
+    narratorNameBn: 'কৌশিক সেন (গম্ভীর ব্যারিটোন পাঠ)',
+    narratorNameEn: 'Kaushik Sen · Deep Grounded Baritone',
     coverMotif: 'padma_nadir_majhi',
     palette: {
       bg: '#0F172A',
@@ -1525,8 +1525,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '3h 40m',
     totalDurationSeconds: 13200,
     narratorVoice: 'Charon',
-    narratorNameBn: 'অরিন্দম শীল (রহস্যময় কণ্ঠ)',
-    narratorNameEn: 'Arindam Sil · Noir Analytical Narration',
+    narratorNameBn: 'অরিন্দম শীল (রহস্যময় গভীর ব্যারিটোন)',
+    narratorNameEn: 'Arindam Sil · Noir Baritone Narrator',
     coverMotif: 'byomkesh',
     palette: {
       bg: '#27272A',
@@ -1648,9 +1648,9 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     sourceName: 'Visva-Bharati Santiniketan · 1941 Unabridged Archive',
     totalDurationFormatted: '2h 05m',
     totalDurationSeconds: 7500,
-    narratorVoice: 'Charon',
-    narratorNameBn: 'শঙ্খ ঘোষাল (মননশীল পাঠ)',
-    narratorNameEn: 'Shankha Ghoshal · Reflective Scholarly Voice',
+    narratorVoice: 'Orus',
+    narratorNameBn: 'শঙ্খ ঘোষাল (মননশীল গভীর ব্যারিটোন)',
+    narratorNameEn: 'Shankha Ghoshal · Reflective Deep Baritone',
     coverMotif: 'devdas',
     palette: {
       bg: '#292524',
