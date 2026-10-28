@@ -135,6 +135,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${cormorant.variable} ${lora.variable} ${notoBengali.variable} ${jetbrainsMono.variable}`}
     >
       <head>
