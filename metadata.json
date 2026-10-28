@@ -1,0 +1,6 @@
+{
+  "name": "BanglaGrantha",
+  "description": "Global digital library and universal audiobook sanctuary for classic and complete Bengali literature, connecting federated e-book archives with synchronized multi-device reading and narration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
