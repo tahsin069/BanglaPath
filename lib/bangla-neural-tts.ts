@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import WebSocket from 'ws';
+import type { ClientRequest, IncomingMessage } from 'http';
 
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const WSS_URL =
@@ -92,9 +94,8 @@ function generateSecMsGec(clockOffsetMs: number): string {
 }
 
 /**
- * Builds pure, un-resampled SSML at native model pitch (+0Hz) and rate (+0%).
- * Keeping pitch="+0Hz" and rate="+0%" prevents server-side phase-vocoder resampling,
- * preserving 100% of the natural human glottal warmth and eliminating robotic artifacts.
+ * Builds pure, un-resampled SSML at native model pitch (+0Hz) and rate (+0%)
+ * for the Generic Bengali Male Voice Pack (`bn-BD-PradeepNeural` / `bn-IN-BashkarNeural`).
  */
 export function buildLiteraryStorytellingSSML(options: {
   text: string;
@@ -106,7 +107,6 @@ export function buildLiteraryStorytellingSSML(options: {
   const cleanText = text
     .replace(/\s+/g, ' ')
     .trim()
-    // Replace em-dashes with a natural comma-space so the neural voice pauses naturally without stuttering
     .replace(/\s*(—|--)\s*/g, ', ')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -123,7 +123,7 @@ export function buildLiteraryStorytellingSSML(options: {
             </speak>`;
 }
 
-async function openAndSynthesizeSingleSentence(
+async function openAndSynthesizeStream(
   options: {
     text: string;
     voiceName: string;
@@ -131,8 +131,6 @@ async function openAndSynthesizeSingleSentence(
   },
   retryOnClockSkew = true
 ): Promise<Buffer> {
-  const WebSocketClient = eval('require')('ws');
-
   const connId = crypto.randomBytes(16).toString('hex');
   const reqId = crypto.randomBytes(16).toString('hex');
   const secMsGec = generateSecMsGec(cachedClockOffsetMs);
@@ -141,7 +139,7 @@ async function openAndSynthesizeSingleSentence(
   const ssml = buildLiteraryStorytellingSSML(options);
 
   return new Promise<Buffer>((resolve, reject) => {
-    const ws = new WebSocketClient(url, {
+    const ws = new WebSocket(url, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0',
@@ -160,11 +158,11 @@ async function openAndSynthesizeSingleSentence(
         } catch {
           // ignore
         }
-        reject(new Error('Native Neural TTS timed out'));
+        reject(new Error('Generic Bangla Male Neural TTS timed out'));
       }
-    }, 12000);
+    }, 15000);
 
-    ws.once('unexpected-response', (request: any, response: any) => {
+    ws.once('unexpected-response', (request: ClientRequest, response: IncomingMessage) => {
       clearTimeout(timeout);
       const serverDateStr = response?.headers?.date;
       const statusCode = response?.statusCode;
@@ -180,7 +178,7 @@ async function openAndSynthesizeSingleSentence(
         if (Number.isFinite(serverMs)) {
           cachedClockOffsetMs = serverMs - Date.now();
           settled = true;
-          openAndSynthesizeSingleSentence(options, false).then(resolve).catch(reject);
+          openAndSynthesizeStream(options, false).then(resolve).catch(reject);
           return;
         }
       }
@@ -225,7 +223,7 @@ async function openAndSynthesizeSingleSentence(
       });
     });
 
-    ws.on('message', (data: Buffer | ArrayBuffer | Buffer[], isBinary: boolean) => {
+    ws.on('message', (data: WebSocket.RawData, isBinary: boolean) => {
       const buf = Buffer.isBuffer(data)
         ? data
         : data instanceof ArrayBuffer
@@ -287,10 +285,9 @@ async function openAndSynthesizeSingleSentence(
 }
 
 /**
- * Splits a multi-sentence Bengali or English passage into natural sentence units (`।`, `.`, `?`, `!`)
- * and synthesizes each sentence at pure `+0Hz / +0%` native neural output.
- * This prevents long-paragraph prosody flattening and inserts organic human breathing pauses
- * between sentences with zero vocoder distortion.
+ * Synthesizes Bengali or English text using the Generic Male Voice Pack (`bn-BD-PradeepNeural` / `bn-IN-BashkarNeural`).
+ * Uses a single continuous WebSocket stream per passage (or sequential 1200-char chunks) so cloud/serverless IPs
+ * never hit parallel connection limits and MP3 frames play seamlessly across all platforms.
  */
 export async function synthesizeNativeNeuralMp3(options: {
   text: string;
@@ -301,49 +298,45 @@ export async function synthesizeNativeNeuralMp3(options: {
   isPoetic?: boolean;
 }): Promise<Buffer> {
   const { text, voiceName, locale } = options;
+  const trimmed = text.replace(/\s+/g, ' ').trim();
 
+  if (trimmed.length <= 1200) {
+    return openAndSynthesizeStream({
+      text: trimmed,
+      voiceName,
+      locale,
+    });
+  }
+
+  // For extra-long passages (> 1200 chars), split into ~900-char sentence groups sequentially
   const rawSentences =
     locale.startsWith('bn')
-      ? text.match(/[^।?!]+[।?!]+|\S.+$/g) || [text]
-      : text.match(/[^.?!]+[.?!]+|\S.+$/g) || [text];
+      ? trimmed.match(/[^।?!]+[।?!]+|\S.+$/g) || [trimmed]
+      : trimmed.match(/[^.?!]+[.?!]+|\S.+$/g) || [trimmed];
 
-  // Group very short fragments (< 25 chars) with the following sentence so dialogue tags flow naturally
-  const mergedSentences: string[] = [];
+  const groups: string[] = [];
+  let current = '';
   for (const s of rawSentences) {
-    const trimmed = s.trim();
-    if (!trimmed) continue;
-    if (
-      mergedSentences.length > 0 &&
-      mergedSentences[mergedSentences.length - 1].length < 28
-    ) {
-      mergedSentences[mergedSentences.length - 1] += ' ' + trimmed;
+    if ((current + ' ' + s).trim().length > 950 && current.length > 0) {
+      groups.push(current.trim());
+      current = s.trim();
     } else {
-      mergedSentences.push(trimmed);
+      current = (current + ' ' + s).trim();
     }
   }
-
-  const chunksToSynthesize = mergedSentences.length > 0 ? mergedSentences.slice(0, 8) : [text];
-
-  // Warm up clock offset on the first chunk if not yet synced, then synthesize remaining in parallel
-  const firstBuf = await openAndSynthesizeSingleSentence({
-    text: chunksToSynthesize[0],
-    voiceName,
-    locale,
-  });
-
-  if (chunksToSynthesize.length === 1) {
-    return firstBuf;
+  if (current.trim()) {
+    groups.push(current.trim());
   }
 
-  const restBuffers = await Promise.all(
-    chunksToSynthesize.slice(1).map((sentence) =>
-      openAndSynthesizeSingleSentence({
-        text: sentence,
-        voiceName,
-        locale,
-      })
-    )
-  );
+  const buffers: Buffer[] = [];
+  for (const group of groups.slice(0, 4)) {
+    const buf = await openAndSynthesizeStream({
+      text: group,
+      voiceName,
+      locale,
+    });
+    buffers.push(buf);
+  }
 
-  return Buffer.concat([firstBuf, ...restBuffers]);
+  return Buffer.concat(buffers);
 }

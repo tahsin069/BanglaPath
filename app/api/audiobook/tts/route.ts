@@ -1,7 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { BARITONE_VOICE_PRESETS, MaleNarratorPersona } from '@/lib/baritone-audio-engine';
 import { synthesizeNativeNeuralMp3 } from '@/lib/bangla-neural-tts';
 
@@ -16,8 +14,6 @@ const ai = new GoogleGenAI({
     },
   },
 });
-
-let cachedClonedAgniVoiceId: string | null = null;
 
 function ensureWavHeader(audioBuffer: Buffer, sampleRate = 24000): Buffer {
   if (
@@ -54,79 +50,19 @@ function ensureWavHeader(audioBuffer: Buffer, sampleRate = 24000): Buffer {
   return Buffer.concat([header, audioBuffer]);
 }
 
-/**
- * If ELEVENLABS_API_KEY is present, clones the exact reference voice of Agni from
- * `/public/assets/aistudio/Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3`
- * (extracting the clean solo speech window 00:32 - 02:14) or uses ELEVENLABS_VOICE_ID.
- */
-async function getOrCloneAgniElevenLabsVoiceId(apiKey: string, fallbackVoiceId: string): Promise<string> {
-  const customEnvId = process.env.ELEVENLABS_VOICE_ID?.trim();
-  if (customEnvId) return customEnvId;
-  if (cachedClonedAgniVoiceId) return cachedClonedAgniVoiceId;
-
-  try {
-    const mp3Path = path.join(
-      process.cwd(),
-      'public',
-      'assets',
-      'aistudio',
-      'Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3'
-    );
-    if (fs.existsSync(mp3Path)) {
-      const fd = fs.openSync(mp3Path, 'r');
-      // 00:32 to 02:14 (~102 seconds at ~24KB/s = ~2.4MB clean solo speech slice of Agni)
-      const startByte = 768000;
-      const lengthBytes = 2400000;
-      const sampleBuf = Buffer.alloc(lengthBytes);
-      const bytesRead = fs.readSync(fd, sampleBuf, 0, lengthBytes, startByte);
-      fs.closeSync(fd);
-
-      if (bytesRead > 100000) {
-        const formData = new FormData();
-        formData.append('name', 'Agni - BanglaGrantha Storyteller');
-        formData.append(
-          'description',
-          'Warm expressive Bengali male storyteller voice from Satyajit Ray Apadartho'
-        );
-        const blob = new Blob([sampleBuf.subarray(0, bytesRead)], { type: 'audio/mpeg' });
-        formData.append('files', blob, 'agni_reference_sample.mp3');
-
-        const cloneRes = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-          method: 'POST',
-          headers: {
-            'xi-api-key': apiKey,
-          },
-          body: formData,
-        });
-
-        if (cloneRes.ok) {
-          const cloneData = await cloneRes.json();
-          if (cloneData?.voice_id) {
-            cachedClonedAgniVoiceId = cloneData.voice_id;
-            return cloneData.voice_id;
-          }
-        }
-      }
-    }
-  } catch {
-    // Fallback to preconfigured voice ID if instant voice cloning is not enabled on the key
-  }
-
-  return fallbackVoiceId;
-}
-
-async function synthesizeElevenLabsStoryteller(
+async function synthesizeElevenLabsMaleVoice(
   text: string,
-  fallbackVoiceId: string
+  voiceId: string
 ): Promise<string | null> {
   const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
-  if (!apiKey || apiKey === 'MY_ELEVENLABS_API_KEY') return null;
+  if (!apiKey || !apiKey.startsWith('sk_')) return null;
+
+  const targetVoiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || voiceId;
 
   try {
-    const voiceId = await getOrCloneAgniElevenLabsVoiceId(apiKey, fallbackVoiceId);
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(
-        voiceId
+        targetVoiceId
       )}?output_format=mp3_44100_128`,
       {
         method: 'POST',
@@ -139,9 +75,9 @@ async function synthesizeElevenLabsStoryteller(
           text: text.slice(0, 4500),
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.62,
-            similarity_boost: 0.88,
-            style: 0.34,
+            stability: 0.65,
+            similarity_boost: 0.85,
+            style: 0.25,
             use_speaker_boost: true,
           },
         }),
@@ -158,15 +94,62 @@ async function synthesizeElevenLabsStoryteller(
   }
 }
 
+async function synthesizeGeminiMaleVoice(
+  text: string,
+  lang: 'bn' | 'en',
+  geminiVoice: 'Charon' | 'Fenrir' | 'Puck'
+): Promise<string | null> {
+  if (!process.env.GEMINI_API_KEY) return null;
+
+  try {
+    const stylePrompt =
+      lang === 'bn'
+        ? 'Warm, natural, soothing Bengali male audiobook storyteller with clear standard Bangla pronunciation and calm literary pacing'
+        : 'Warm, natural, soothing deep male audiobook storyteller with calm literary pacing';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash-lite-tts',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: text.slice(0, 4000),
+              // @ts-ignore - speechMetadata supported by Gemini 3.8 TTS
+              speechMetadata: {
+                style: stylePrompt,
+              },
+            },
+          ],
+        },
+      ],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: geminiVoice },
+          },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) return null;
+
+    const rawBuf = Buffer.from(base64Audio, 'base64');
+    if (rawBuf.length < 256) return null;
+
+    const wavBuf = ensureWavHeader(rawBuf, 24000);
+    return wavBuf.toString('base64');
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const {
-      text,
-      lang = 'bn',
-      persona = 'deep-baritone',
-      style = 'Agni Friday Classics expressive Bengali male storyteller',
-    } = body;
+    const { text, lang = 'bn', persona = 'deep-baritone' } = body;
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -181,30 +164,23 @@ export async function POST(req: NextRequest) {
     const preset = BARITONE_VOICE_PRESETS[validPersona];
 
     // =========================================================================
-    // PATH A: BENGALI STORYTELLER NARRATION (lang === 'bn')
-    // 1. If ELEVENLABS_API_KEY is configured, synthesizes using Agni's cloned voice
-    //    from the uploaded Apadartho MP3.
-    // 2. Otherwise, synthesizes using Native Calcutta Male Neural Voice (`bn-IN-BashkarNeural`)
-    //    with Agni's exact Friday Classics dramatic storytelling SSML phrasing & dialogue shifts.
+    // PATH A: UNIVERSAL GENERIC BENGALI MALE VOICE PACK (lang === 'bn')
+    // 1. Standard Generic Bengali Male Neural Voice Pack (`bn-BD-PradeepNeural` & `bn-IN-BashkarNeural`)
+    // 2. Gemini 3.8 TTS Male Voice (`Charon`) over HTTPS REST
+    // 3. ElevenLabs Multilingual v2 Male Voice (if sk_ key is configured)
     // =========================================================================
     if (targetLang === 'bn') {
-      const elevenLabsBnBase64 = await synthesizeElevenLabsStoryteller(
-        text,
-        preset.elevenLabsVoiceId
-      );
-      if (elevenLabsBnBase64) {
-        return NextResponse.json({
-          audioBase64: elevenLabsBnBase64,
-          mimeType: 'audio/mpeg',
-          lang: 'bn',
-          voiceName: 'অগ্নি · শ্রুতি-গল্প কথক (Agni Reference Voice)',
-          engine: 'agni-reference-elevenlabs-v2',
-        });
-      }
-
-      const bnCandidates: Array<{ voiceName: string; locale: string }> = [
-        { voiceName: 'bn-IN-BashkarNeural', locale: 'bn-IN' },
-        { voiceName: 'bn-BD-PradeepNeural', locale: 'bn-BD' },
+      const bnCandidates: Array<{ voiceName: string; locale: string; label: string }> = [
+        {
+          voiceName: 'bn-BD-PradeepNeural',
+          locale: 'bn-BD',
+          label: 'বাংলা পুরুষ কণ্ঠ · Generic Bangla Male Voice (Pradeep)',
+        },
+        {
+          voiceName: 'bn-IN-BashkarNeural',
+          locale: 'bn-IN',
+          label: 'বাংলা পুরুষ কণ্ঠ · Generic Bangla Male Voice (Bashkar)',
+        },
       ];
 
       for (const candidate of bnCandidates) {
@@ -222,33 +198,44 @@ export async function POST(req: NextRequest) {
             audioBase64: mp3Buffer.toString('base64'),
             mimeType: 'audio/mpeg',
             lang: 'bn',
-            voiceName: 'অগ্নি · শ্রুতি-গল্প কথক (Friday Classics Style)',
-            engine: 'agni-storyteller-bangla-neural-96k',
+            voiceName: candidate.label,
+            engine: 'generic-bangla-male-neural-96k',
           });
         } catch {
-          // Try fallback Bengali male voice
+          // Try next Bengali male voice candidate
         }
+      }
+
+      const geminiBnWavBase64 = await synthesizeGeminiMaleVoice(text, 'bn', preset.geminiVoice);
+      if (geminiBnWavBase64) {
+        return NextResponse.json({
+          audioBase64: geminiBnWavBase64,
+          mimeType: 'audio/wav',
+          lang: 'bn',
+          voiceName: 'বাংলা পুরুষ কণ্ঠ · Universal Bangla Male Voice',
+          engine: 'gemini-3.8-flash-lite-tts-male',
+        });
+      }
+
+      const elevenLabsBnBase64 = await synthesizeElevenLabsMaleVoice(
+        text,
+        preset.elevenLabsVoiceId
+      );
+      if (elevenLabsBnBase64) {
+        return NextResponse.json({
+          audioBase64: elevenLabsBnBase64,
+          mimeType: 'audio/mpeg',
+          lang: 'bn',
+          voiceName: 'বাংলা পুরুষ কণ্ঠ · Studio Bangla Male Voice',
+          engine: 'elevenlabs-multilingual-v2-male',
+        });
       }
     }
 
     // =========================================================================
-    // PATH B: ENGLISH STORYTELLER NARRATION (lang === 'en')
+    // PATH B: UNIVERSAL GENERIC ENGLISH MALE VOICE PACK (lang === 'en')
     // =========================================================================
     if (targetLang === 'en') {
-      const elevenLabsBase64 = await synthesizeElevenLabsStoryteller(
-        text,
-        preset.elevenLabsVoiceId
-      );
-      if (elevenLabsBase64) {
-        return NextResponse.json({
-          audioBase64: elevenLabsBase64,
-          mimeType: 'audio/mpeg',
-          lang: 'en',
-          voiceName: preset.labelEn,
-          engine: 'elevenlabs-multilingual-v2',
-        });
-      }
-
       const enCandidates: Array<{ voiceName: string; locale: string }> = [
         { voiceName: 'en-US-BrianMultilingualNeural', locale: 'en-US' },
         { voiceName: 'en-GB-RyanNeural', locale: 'en-GB' },
@@ -269,55 +256,37 @@ export async function POST(req: NextRequest) {
             audioBase64: mp3Buffer.toString('base64'),
             mimeType: 'audio/mpeg',
             lang: 'en',
-            voiceName: 'Agni · Classic Storyteller (EN)',
-            engine: 'native-english-male-neural-96k',
+            voiceName: 'Universal Male Storyteller (EN)',
+            engine: 'generic-english-male-neural-96k',
           });
         } catch {
           // Try next English male candidate
         }
       }
 
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash-lite-tts',
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: text.slice(0, 4000),
-                  // @ts-ignore - speechMetadata supported by Gemini 3.8 TTS
-                  speechMetadata: {
-                    style: `${preset.descriptionEn} ${style}`,
-                  },
-                },
-              ],
-            },
-          ],
-          config: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: preset.geminiVoice },
-              },
-            },
-          },
+      const geminiEnWavBase64 = await synthesizeGeminiMaleVoice(text, 'en', preset.geminiVoice);
+      if (geminiEnWavBase64) {
+        return NextResponse.json({
+          audioBase64: geminiEnWavBase64,
+          mimeType: 'audio/wav',
+          lang: 'en',
+          voiceName: 'Universal Male Storyteller (EN)',
+          engine: 'gemini-3.8-flash-lite-tts-male',
         });
+      }
 
-        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (base64Audio) {
-          const rawBuf = Buffer.from(base64Audio, 'base64');
-          const wavBuf = ensureWavHeader(rawBuf, 24000);
-          return NextResponse.json({
-            audioBase64: wavBuf.toString('base64'),
-            mimeType: 'audio/wav',
-            lang: 'en',
-            voiceName: preset.labelEn,
-            engine: 'gemini-3.8-flash-lite-tts',
-          });
-        }
-      } catch {
-        // Fall through
+      const elevenLabsEnBase64 = await synthesizeElevenLabsMaleVoice(
+        text,
+        preset.elevenLabsVoiceId
+      );
+      if (elevenLabsEnBase64) {
+        return NextResponse.json({
+          audioBase64: elevenLabsEnBase64,
+          mimeType: 'audio/mpeg',
+          lang: 'en',
+          voiceName: preset.labelEn,
+          engine: 'elevenlabs-multilingual-v2-male',
+        });
       }
     }
 
@@ -326,15 +295,18 @@ export async function POST(req: NextRequest) {
         fallback: true,
         lang: targetLang,
         voiceName: preset.labelBn,
-        reason: 'Using client male speech synthesis.',
+        reason: 'Using cross-platform client male speech synthesis.',
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         fallback: true,
-        reason: error?.message || 'Using client male speech synthesis.',
+        reason:
+          error instanceof Error
+            ? error.message
+            : 'Using cross-platform client male speech synthesis.',
       },
       { status: 200 }
     );

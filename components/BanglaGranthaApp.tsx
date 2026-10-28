@@ -34,6 +34,8 @@ import {
   BARITONE_VOICE_PRESETS,
   MaleNarratorPersona,
   playBaritoneMasteredAudio,
+  getBrowserVoicesAsync,
+  selectUniversalMaleSpeechVoice,
 } from '@/lib/baritone-audio-engine';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
@@ -499,7 +501,7 @@ export default function BanglaGranthaApp() {
 
           setEngineNotice(
             lang === 'bn'
-              ? `গল্প পাঠে: অগ্নি (শ্রুতি-গল্প কথক) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              ? `বাংলা পুরুষ কণ্ঠ (Generic Bangla Male Voice) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
               : `Storyteller: ${preset.labelEn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
@@ -508,7 +510,7 @@ export default function BanglaGranthaApp() {
               audioCtx: audioCtxRef.current,
               audioBase64: data.audioBase64,
               mimeType: data.mimeType || 'audio/mpeg',
-              engine: data.engine || 'agni-storyteller-bangla-neural-96k',
+              engine: data.engine || 'generic-bangla-male-neural-96k',
               persona: activePersona,
               playbackSpeed,
               isMuted,
@@ -529,7 +531,7 @@ export default function BanglaGranthaApp() {
             const audio = new Audio(
               `data:${data.mimeType || 'audio/mpeg'};base64,${data.audioBase64}`
             );
-            (audio as any).preservesPitch = true;
+            (audio as unknown as { preservesPitch: boolean }).preservesPitch = true;
             audio.playbackRate = playbackSpeed;
             audio.muted = isMuted;
             htmlAudioRef.current = audio;
@@ -553,7 +555,7 @@ export default function BanglaGranthaApp() {
         setIsLoadingAudio(false);
       }
 
-      // Offline / Browser SpeechSynthesis Baritone Fallback
+      // Universal Cross-Platform Browser Male SpeechSynthesis Fallback
       if (sessionId !== playbackSessionRef.current) return;
       if (ambientTanpura) {
         startTanpuraDrone();
@@ -562,59 +564,21 @@ export default function BanglaGranthaApp() {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window && !isMuted) {
         try {
           window.speechSynthesis.cancel();
+          const voices = await getBrowserVoicesAsync();
+          if (sessionId !== playbackSessionRef.current) return;
+
+          const selected = selectUniversalMaleSpeechVoice(voices, lang);
           const utterance = new SpeechSynthesisUtterance(text);
-          utterance.pitch = preset.browserPitch;
-          utterance.rate = playbackSpeed * preset.baseTempoMultiplier;
-          utterance.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
-
-          const voices = window.speechSynthesis.getVoices();
-          const maleKeywords = [
-            'male',
-            'prabhat',
-            'bashkar',
-            'tanmoy',
-            'subrata',
-            'rishi',
-            'hemant',
-            'david',
-            'daniel',
-            'george',
-            'guy',
-            'arthur',
-            'oliver',
-            'alex',
-          ];
-
-          if (lang === 'bn') {
-            const bnVoices = voices.filter(
-              (v) =>
-                v.lang.toLowerCase().includes('bn') ||
-                v.name.toLowerCase().includes('bengali') ||
-                v.name.toLowerCase().includes('bangla')
-            );
-            const maleBnVoice =
-              bnVoices.find((v) =>
-                maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
-              ) || bnVoices[0];
-            if (maleBnVoice) {
-              utterance.voice = maleBnVoice;
-              utterance.lang = maleBnVoice.lang;
-            }
-          } else {
-            const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('en'));
-            const maleEnVoice =
-              enVoices.find((v) =>
-                maleKeywords.some((kw) => v.name.toLowerCase().includes(kw))
-              ) || enVoices[0];
-            if (maleEnVoice) {
-              utterance.voice = maleEnVoice;
-              utterance.lang = maleEnVoice.lang;
-            }
+          utterance.pitch = selected.pitch;
+          utterance.rate = playbackSpeed * selected.rateMultiplier;
+          utterance.lang = selected.langTag;
+          if (selected.voice) {
+            utterance.voice = selected.voice;
           }
 
           setEngineNotice(
             lang === 'bn'
-              ? `গভীর ব্যারিটোন বাংলা অডিও চলছে · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              ? `বাংলা পুরুষ কণ্ঠ · Ch ${chNumber}, Passage 0${paraIdx + 1}`
               : `${preset.labelEn} Audio Active · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
