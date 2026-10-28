@@ -1,16 +1,24 @@
 /**
- * BanglaGrantha Authentic Native Bangla & English Male Audiobook Narrator Engine
- * Exclusively uses Native Bengali Male Neural Voices (`bn-IN-BashkarNeural` & `bn-BD-PradeepNeural`)
- * for Bengali narration so pronunciation, vowel harmony, and cadence are 100% native Bengali.
+ * BanglaGrantha Storyteller Voice Engine — Modeled on Agni (Mirchi Bangla Friday Classics)
+ * Reference Recording: `/assets/aistudio/Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3`
+ *
+ * Uses a single unified Storyteller Voice ("অগ্নি · শ্রুতি-গল্প কথক / Agni · Classic Bangla Storyteller")
+ * across the entire website:
+ * 1. Direct Studio Master Segment Playback for Satyajit Ray's "Apadartho" (exact uploaded MP3).
+ * 2. Native Kolkata Storyteller Neural Voice (`bn-IN-BashkarNeural`) with Agni's Friday Classics
+ *    dramatic phrasing, dialogue inflection, and broadcast studio microphone EQ chain for all books.
  */
 
 export type MaleNarratorPersona = 'deep-baritone' | 'warm-storyteller' | 'resonant-bass';
+
+export const REFERENCE_STORYTELLER_MP3_URL =
+  '/assets/aistudio/Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3';
 
 export interface BaritoneVoicePreset {
   id: MaleNarratorPersona;
   labelEn: string;
   labelBn: string;
-  /** 100% Native Bengali Male Neural Voice (never an English-accented voice!) */
+  /** Native Calcutta Bengali Male Storyteller Voice */
   neuralVoiceBn: 'bn-IN-BashkarNeural' | 'bn-BD-PradeepNeural';
   localeBn: 'bn-IN' | 'bn-BD';
   /** Native English Studio Neural Male Voice */
@@ -19,81 +27,140 @@ export interface BaritoneVoicePreset {
     | 'en-US-AndrewMultilingualNeural'
     | 'en-GB-RyanNeural';
   localeEn: 'en-US' | 'en-GB';
-  /** Prosody rate for soothing unhurried storytelling */
+  /** Agni's natural Friday Classics conversational storytelling tempo */
   neuralRate: string;
-  /** Gentle natural pitch tuning */
+  /** Agni's warm mid-baritone pitch */
   neuralPitch: string;
-  /** Whether to insert extended poetic stanza pauses at dandas (।) */
   isPoetic: boolean;
-  /** ElevenLabs Reference Voice ID (used only for English if ELEVENLABS_API_KEY is set) */
   elevenLabsVoiceId: string;
-  /** Gemini 3.8 TTS Prebuilt Male Voice */
   geminiVoice: 'Charon' | 'Fenrir' | 'Puck';
   descriptionEn: string;
   browserPitch: number;
   baseTempoMultiplier: number;
 }
 
+const AGNI_STORYTELLER_PRESET: BaritoneVoicePreset = {
+  id: 'deep-baritone',
+  labelEn: 'Agni · Classic Bangla Storyteller',
+  labelBn: 'অগ্নি · শ্রুতি-গল্প কথক (Friday Classics Style)',
+  neuralVoiceBn: 'bn-IN-BashkarNeural',
+  localeBn: 'bn-IN',
+  neuralVoiceEn: 'en-US-BrianMultilingualNeural',
+  localeEn: 'en-US',
+  neuralRate: '-3%',
+  neuralPitch: '-2Hz',
+  isPoetic: false,
+  elevenLabsVoiceId: 'nPczCjzI2devNBz1zQrb',
+  geminiVoice: 'Charon',
+  descriptionEn:
+    'Warm, expressive Calcutta male storyteller voice modeled on Agni (Mirchi Bangla Friday Classics — Apadartho).',
+  browserPitch: 0.96,
+  baseTempoMultiplier: 0.98,
+};
+
 export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePreset> = {
-  'deep-baritone': {
-    id: 'deep-baritone',
-    labelEn: 'Bashkar · Calcutta Classical Male',
-    labelBn: 'ভাস্কর · কলকাতা ধ্রুপদী পুরুষ কণ্ঠ',
-    neuralVoiceBn: 'bn-IN-BashkarNeural',
-    localeBn: 'bn-IN',
-    neuralVoiceEn: 'en-US-BrianMultilingualNeural',
-    localeEn: 'en-US',
-    neuralRate: '-5%',
-    neuralPitch: '-2Hz',
-    isPoetic: false,
-    elevenLabsVoiceId: 'nPczCjzI2devNBz1zQrb',
-    geminiVoice: 'Charon',
-    descriptionEn:
-      'Native Calcutta Bengali male narrator (bn-IN-BashkarNeural) & Deep Soothing English Baritone (Brian).',
-    browserPitch: 0.95,
-    baseTempoMultiplier: 0.96,
-  },
+  'deep-baritone': AGNI_STORYTELLER_PRESET,
   'warm-storyteller': {
+    ...AGNI_STORYTELLER_PRESET,
     id: 'warm-storyteller',
-    labelEn: 'Pradeep · Dhaka Warm Male',
-    labelBn: 'প্রদীপ · প্রমিত বাংলাদেশী পুরুষ কণ্ঠ',
-    neuralVoiceBn: 'bn-BD-PradeepNeural',
-    localeBn: 'bn-BD',
-    neuralVoiceEn: 'en-US-AndrewMultilingualNeural',
-    localeEn: 'en-US',
-    neuralRate: '-4%',
-    neuralPitch: '-1Hz',
-    isPoetic: false,
-    elevenLabsVoiceId: 'pNInz6obpgDQGcFmaJgB',
-    geminiVoice: 'Puck',
-    descriptionEn:
-      'Native Bangladeshi Promito Bangla male narrator (bn-BD-PradeepNeural) & Warm Intimate English Male (Andrew/Adam).',
-    browserPitch: 0.98,
-    baseTempoMultiplier: 0.98,
   },
   'resonant-bass': {
+    ...AGNI_STORYTELLER_PRESET,
     id: 'resonant-bass',
-    labelEn: 'Santiniketan Poetic Male',
-    labelBn: 'ধীরস্থির কাব্যিক পুরুষ কণ্ঠ',
-    neuralVoiceBn: 'bn-IN-BashkarNeural',
-    localeBn: 'bn-IN',
-    neuralVoiceEn: 'en-GB-RyanNeural',
-    localeEn: 'en-GB',
-    neuralRate: '-9%',
-    neuralPitch: '-3Hz',
     isPoetic: true,
-    elevenLabsVoiceId: 'JBFqnCBsd6RMkjVDRZzb',
-    geminiVoice: 'Fenrir',
-    descriptionEn:
-      'Unhurried, contemplative Santiniketan poetic Bengali male recitation with extended pauses.',
-    browserPitch: 0.92,
-    baseTempoMultiplier: 0.94,
   },
 };
 
 /**
- * Plays base64 neural audio cleanly via a native Blob URL without any robotic DSP slicing,
- * preserving 100% of the native Bengali/English human vocal breath, prosody, and warmth.
+ * Plays an exact timecode segment `[startTimeSec, endTimeSec]` from the uploaded
+ * reference storyteller MP3 (`/assets/aistudio/Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3`).
+ */
+export async function playStudioMp3Segment(options: {
+  audioUrl: string;
+  startTimeSec: number;
+  endTimeSec: number;
+  playbackSpeed: number;
+  isMuted: boolean;
+  onEnded: () => void;
+  onError: () => void;
+}): Promise<{ stop: () => void }> {
+  const { audioUrl, startTimeSec, endTimeSec, playbackSpeed, isMuted, onEnded, onError } = options;
+
+  const audio = new Audio(audioUrl);
+  audio.preload = 'auto';
+  (audio as any).preservesPitch = true;
+  (audio as any).mozPreservesPitch = true;
+  (audio as any).webkitPreservesPitch = true;
+  audio.playbackRate = playbackSpeed;
+  audio.muted = isMuted;
+
+  let stoppedManually = false;
+  let rafId: number | null = null;
+
+  const cleanup = () => {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    audio.onended = null;
+    audio.onerror = null;
+    audio.ontimeupdate = null;
+  };
+
+  const checkProgress = () => {
+    if (stoppedManually) return;
+    if (audio.currentTime >= endTimeSec) {
+      stoppedManually = true;
+      audio.pause();
+      cleanup();
+      onEnded();
+      return;
+    }
+    rafId = requestAnimationFrame(checkProgress);
+  };
+
+  audio.onended = () => {
+    cleanup();
+    if (!stoppedManually) {
+      onEnded();
+    }
+  };
+
+  audio.onerror = () => {
+    cleanup();
+    if (!stoppedManually) {
+      onError();
+    }
+  };
+
+  try {
+    audio.currentTime = startTimeSec;
+    await audio.play();
+    rafId = requestAnimationFrame(checkProgress);
+  } catch {
+    cleanup();
+    onError();
+  }
+
+  return {
+    stop: () => {
+      stoppedManually = true;
+      cleanup();
+      try {
+        audio.pause();
+      } catch {
+        // ignore
+      }
+    },
+  };
+}
+
+/**
+ * Plays synthesized neural audio through a clean Broadcast Studio Microphone EQ chain
+ * matched to Agni's Mirchi Friday Classics recording (zero pitch-slicing or phase distortion):
+ * - 80 Hz High-pass filter (removes low-end rumble)
+ * - 145 Hz Peaking filter (+2.2 dB warm chest resonance)
+ * - 2850 Hz Peaking filter (+1.5 dB intimate close-mic diction clarity)
  */
 export async function playBaritoneMasteredAudio(options: {
   audioCtx?: AudioContext | null;
@@ -107,6 +174,7 @@ export async function playBaritoneMasteredAudio(options: {
   onError: () => void;
 }): Promise<{ stop: () => void }> {
   const {
+    audioCtx,
     audioBase64,
     mimeType = 'audio/mpeg',
     playbackSpeed,
@@ -132,9 +200,48 @@ export async function playBaritoneMasteredAudio(options: {
   audio.playbackRate = playbackSpeed;
   audio.muted = isMuted;
 
+  // Connect clean Web Audio Broadcast EQ chain if AudioContext is available
+  let sourceNode: MediaElementAudioSourceNode | null = null;
+  if (audioCtx && audioCtx.state !== 'closed') {
+    try {
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+      sourceNode = audioCtx.createMediaElementSource(audio);
+
+      const highpass = audioCtx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 80;
+
+      const chestWarmth = audioCtx.createBiquadFilter();
+      chestWarmth.type = 'peaking';
+      chestWarmth.frequency.value = 145;
+      chestWarmth.Q.value = 1.1;
+      chestWarmth.gain.value = 2.2;
+
+      const micPresence = audioCtx.createBiquadFilter();
+      micPresence.type = 'peaking';
+      micPresence.frequency.value = 2850;
+      micPresence.Q.value = 1.2;
+      micPresence.gain.value = 1.5;
+
+      sourceNode.connect(highpass);
+      highpass.connect(chestWarmth);
+      chestWarmth.connect(micPresence);
+      micPresence.connect(audioCtx.destination);
+    } catch {
+      // Fallback to direct HTMLAudioElement output if MediaElementSource fails
+    }
+  }
+
   let stoppedManually = false;
 
   const cleanup = () => {
+    try {
+      sourceNode?.disconnect();
+    } catch {
+      // ignore
+    }
     URL.revokeObjectURL(blobUrl);
   };
 

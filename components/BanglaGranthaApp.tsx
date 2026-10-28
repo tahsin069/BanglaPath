@@ -34,6 +34,7 @@ import {
   BARITONE_VOICE_PRESETS,
   MaleNarratorPersona,
   playBaritoneMasteredAudio,
+  playStudioMp3Segment,
 } from '@/lib/baritone-audio-engine';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
@@ -74,12 +75,12 @@ export default function BanglaGranthaApp() {
   const [isLoadingAudio, setIsLoadingAudio] = useState<boolean>(false);
   const [isExpandingChapters, setIsExpandingChapters] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [narratorPersona, setNarratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
+  const [narratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [ambientTanpura, setAmbientTanpura] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [engineNotice, setEngineNotice] = useState<string>(
-    'প্রমিত বাংলা পুরুষ কণ্ঠ প্রস্তুত · Native Bengali Male Narrator Ready (ভাস্কর ও প্রদীপ)'
+    'গল্প পাঠে: অগ্নি (শ্রুতি-গল্প কথক) · Storyteller Voice: Agni (Friday Classics Style)'
   );
 
   // Federated E-Book Source Search State
@@ -457,10 +458,45 @@ export default function BanglaGranthaApp() {
       const preset = BARITONE_VOICE_PRESETS[activePersona] || BARITONE_VOICE_PRESETS['deep-baritone'];
 
       setCurrentlySpeakingLang(lang);
+
+      // 1. Direct Studio Recording Playback when the book has Agni's studio MP3 timestamps (e.g., Satyajit Ray's "Apadartho")
+      const chapterObj = bookForVoice.chapters[chNumber - 1];
+      const studioTimes = chapterObj?.studioSegmentTimesBn?.[paraIdx];
+      if (lang === 'bn' && bookForVoice.studioAudioUrl && studioTimes) {
+        setIsLoadingAudio(false);
+        setEngineNotice(
+          `গল্প পাঠে: অগ্নি (ফ্রাইডে ক্লাসিকস স্টুডিও সংস্করণ) · Studio Voice: Agni · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+        );
+
+        try {
+          const studioController = await playStudioMp3Segment({
+            audioUrl: bookForVoice.studioAudioUrl,
+            startTimeSec: studioTimes[0],
+            endTimeSec: studioTimes[1],
+            playbackSpeed,
+            isMuted,
+            onEnded: () => {
+              if (sessionId === playbackSessionRef.current) {
+                onComplete();
+              }
+            },
+            onError: () => {
+              if (sessionId === playbackSessionRef.current) {
+                onComplete();
+              }
+            },
+          });
+          baritoneControllerRef.current = studioController;
+          return;
+        } catch {
+          // Fall through to neural storyteller synthesis if studio file fails to seek
+        }
+      }
+
       setIsLoadingAudio(true);
       setEngineNotice(
         lang === 'bn'
-          ? `গভীর ব্যারিটোন বাংলা অডিও প্রস্তুত হচ্ছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
+          ? `গল্প পাঠে: অগ্নি প্রস্তুত হচ্ছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
           : `Synthesizing ${preset.labelEn} Narration · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
       );
 
@@ -486,17 +522,29 @@ export default function BanglaGranthaApp() {
             startTanpuraDrone();
           }
 
+          if (typeof window !== 'undefined' && !audioCtxRef.current) {
+            try {
+              const AudioContextClass =
+                window.AudioContext ||
+                (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+              audioCtxRef.current = new AudioContextClass();
+            } catch {
+              // ignore
+            }
+          }
+
           setEngineNotice(
             lang === 'bn'
-              ? `প্রমিত বাংলা পুরুষ কণ্ঠে পাঠ চলছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
-              : `Playing ${preset.labelEn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              ? `গল্প পাঠে: অগ্নি (শ্রুতি-গল্প কথক) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              : `Storyteller: ${preset.labelEn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
           try {
             const controller = await playBaritoneMasteredAudio({
+              audioCtx: audioCtxRef.current,
               audioBase64: data.audioBase64,
               mimeType: data.mimeType || 'audio/mpeg',
-              engine: data.engine || 'neural-studio-male-96k',
+              engine: data.engine || 'agni-storyteller-bangla-neural-96k',
               persona: activePersona,
               playbackSpeed,
               isMuted,
@@ -2046,74 +2094,26 @@ export default function BanglaGranthaApp() {
                   </div>
                 </div>
 
-                {/* NATIVE BANGLA & ENGLISH MALE NARRATOR SELECTOR */}
+                {/* WEBSITE STORYTELLER VOICE: AGNI (FRIDAY CLASSICS STYLE) */}
                 <div className="mt-4 pt-3 border-t border-stone-200/80">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">
-                      Native Bangla Male Narrator (প্রমিত বাংলা পুরুষ কণ্ঠ)
-                    </p>
-                    <span className="text-[11px] text-[#9A3412] font-medium">
-                      24kHz Native Neural
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#E5DEC9] rounded-lg">
-                    {(
-                      [
-                        {
-                          id: 'deep-baritone',
-                          shortEn: 'Bashkar (Calcutta)',
-                          shortBn: 'ভাস্কর · কলকাতা কণ্ঠ',
-                        },
-                        {
-                          id: 'warm-storyteller',
-                          shortEn: 'Pradeep (Dhaka)',
-                          shortBn: 'প্রদীপ · ঢাকা কণ্ঠ',
-                        },
-                        {
-                          id: 'resonant-bass',
-                          shortEn: 'Poetic Recitation',
-                          shortBn: 'ধীরস্থির কাব্যিক কণ্ঠ',
-                        },
-                      ] as const
-                    ).map((v) => {
-                      const isSelectedPersona = narratorPersona === v.id;
-                      return (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => {
-                            setNarratorPersona(v.id);
-                            const preset = BARITONE_VOICE_PRESETS[v.id];
-                            setEngineNotice(
-                              `${preset.labelBn} নির্বাচিত · ${preset.labelEn} Selected`
-                            );
-                            if (isPlaying) {
-                              stopAllAudio();
-                              setTimeout(() => {
-                                startPlayback(
-                                  activeParagraphIdx,
-                                  audioLangMode,
-                                  activeChapterIdx,
-                                  activeBook
-                                );
-                              }, 60);
-                            }
-                          }}
-                          className={`px-2 py-1.5 text-center rounded-md transition-colors ${
-                            isSelectedPersona
-                              ? 'bg-stone-900 text-white shadow-xs'
-                              : 'text-stone-800 hover:bg-[#FBF9F5]/60'
-                          }`}
-                        >
-                          <span className="block text-[11px] font-medium leading-tight">
-                            {v.shortEn}
-                          </span>
-                          <span className="block text-[10px] opacity-80 font-[family-name:var(--font-bengali)] leading-tight mt-0.5">
-                            {v.shortBn}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">
+                        Storyteller Voice (গল্প পাঠে)
+                      </p>
+                      <p className="text-xs font-semibold text-stone-900 font-[family-name:var(--font-bengali)] mt-0.5">
+                        অগ্নি · শ্রুতি-গল্প কথক (Agni · Friday Classics Style)
+                      </p>
+                    </div>
+                    {activeBook.id !== 'apadartho-satyajit-ray' && (
+                      <button
+                        type="button"
+                        onClick={() => selectBook(CURATED_BENGALI_BOOKS[0], true, false, 'bn')}
+                        className="px-2.5 py-1.5 text-[11px] font-medium text-[#9A3412] bg-[#FBF9F5] border border-[#9A3412]/40 hover:bg-[#9A3412] hover:text-white rounded-md transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)]"
+                      >
+                        অগ্নি · অপদার্থ শুনুন
+                      </button>
+                    )}
                   </div>
                 </div>
 

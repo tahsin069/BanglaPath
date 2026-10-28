@@ -92,9 +92,10 @@ function generateSecMsGec(clockOffsetMs: number): string {
 }
 
 /**
- * Escapes XML special characters and injects natural Bengali & English literary storytelling
- * breath pauses (<break />) at dandas (।), em-dashes (—), semicolons, and sentence boundaries
- * so the native male narrator speaks with natural, unhurried human cadence.
+ * Formats Bengali & English narrative text with Agni's Friday Classics storytelling
+ * punctuation rhythm (dramatic ellipsis suspensions at em-dashes, breathing room around
+ * quoted character dialogue, and unhurried sentence transitions at dandas `।`) while
+ * keeping strict single-prosody SSML compliance.
  */
 export function buildLiteraryStorytellingSSML(options: {
   text: string;
@@ -106,9 +107,21 @@ export function buildLiteraryStorytellingSSML(options: {
 }): string {
   const { text, voiceName, locale, rate, pitch } = options;
 
-  const escaped = text
+  // Shape text with natural prosodic punctuation cues that the neural transformer
+  // interprets as expressive storytelling pauses and dialogue inflections:
+  const shapedText = text
     .replace(/\s+/g, ' ')
     .trim()
+    // Add a subtle storytelling suspension before and after em-dashes (like "যেমন— আমাদের চাকর নবকেষ্ট")
+    .replace(/\s*(—|--)\s*/g, '... ')
+    // Give quoted character dialogue natural breathing room before and after
+    .replace(/‘([^’]+)’/g, '... “$1” ...')
+    // Ensure Bengali dandas and question/exclamation marks have clean sentence-boundary spacing
+    .replace(/।\s*/g, '।  ')
+    .replace(/\?\s*/g, '?  ')
+    .replace(/!\s*/g, '!  ');
+
+  const escaped = shapedText
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

@@ -37,6 +37,8 @@ export interface BookChapter {
   paragraphsBn: string[];
   paragraphsEn: string[];
   narratorNote: string;
+  /** Optional start/end timestamps (seconds) in `book.studioAudioUrl` for exact studio voice playback */
+  studioSegmentTimesBn?: Array<[number, number]>;
 }
 
 export type CoverMotif =
@@ -85,6 +87,8 @@ export interface BengaliBook {
   provenance: string;
   firstEditionPress: string;
   chapters: BookChapter[];
+  /** Optional direct studio master MP3 recording URL */
+  studioAudioUrl?: string;
   isExternalImport?: boolean;
   externalSourceUrl?: string;
 }
@@ -201,6 +205,164 @@ export const EBOOK_SOURCES: EbookSourceProvider[] = [
 
 export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
   {
+    id: 'apadartho-satyajit-ray',
+    accessionNumber: 'BG-1983-CHG-000',
+    titleBn: 'অপদার্থ',
+    titleEn: 'Apadartho (The Good-for-Nothing · Sejokaka)',
+    authorBn: 'সত্যজিৎ রায়',
+    authorEn: 'Satyajit Ray',
+    authorLifespan: '1921–1992',
+    publishedYear: 1983,
+    genre: 'chhotogolpo',
+    genreLabelEn: 'Chhotogolpo · Short Story',
+    genreLabelBn: 'ছোটগল্প',
+    sourceId: 'wikisource-bn',
+    sourceName: 'Chakmaki Magazine (1390 Bangabda / 1983) · Mirchi Bangla Friday Classics Studio Edition',
+    totalDurationFormatted: '20m 05s',
+    totalDurationSeconds: 1205,
+    narratorVoice: 'Charon',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
+    coverMotif: 'kabuliwala',
+    studioAudioUrl:
+      '/assets/aistudio/Apadartho_Satyajit_Ray_Friday_Classics_Mirchi_Bangla_b9539b4c.mp3',
+    palette: {
+      bg: '#1F1B18',
+      ink: '#FBF9F5',
+      accent: '#9A3412',
+      border: '#3E352F',
+    },
+    synopsisEn:
+      'Satyajit Ray’s beloved bittersweet portrait of Sejokaka (Khetromohan Sen)—branded by everyone in his accomplished family as a good-for-nothing ("Apadartho"), yet remembered with deep affection by his physicist nephew Jhantu.',
+    synopsisBn:
+      'সত্যজিৎ রায়ের অমর ছোটগল্প ‘অপদার্থ’ (প্রথম প্রকাশ: চকমকি পত্রিকা, ১৩৯০ বঙ্গাব্দ / ১৯৮৩ সাল)—সেজকাকা ক্ষেত্রমোহন সেনের সরল, খেয়ালি ও মায়াভরা জীবনের এক অনবদ্য শ্রুতি-আখ্যান। গল্প পাঠে: অগ্নি।',
+    provenance:
+      'First published in Chakmaki (1983 / 1390 Bangabda). Studio narration by Agni (Mirchi Bangla Friday Classics).',
+    firstEditionPress: 'Chakmaki / Ananda Publishers, Calcutta',
+    chapters: [
+      {
+        id: 'apadartho-ch-1',
+        number: 1,
+        titleBn: 'প্রথম পর্ব — অপদার্থ ও সেজকাকার পরিচয়',
+        titleEn: 'Part I · The Word "Apadartho" & Uncle Khetu',
+        durationSeconds: 174,
+        durationFormatted: '02:54',
+        narratorNote: 'Agni’s warm, conversational Calcutta storytelling cadence with gentle irony.',
+        studioSegmentTimesBn: [
+          [32, 79],
+          [82, 136],
+          [138, 206],
+        ],
+        paragraphsBn: [
+          'অপদার্থ কথাটা অনেক লোক সম্বন্ধে অনেক সময় ব্যবহার করা হয়ে থাকে। যেমন— আমাদের চাকর নবকেষ্ট। ‘নব, তুই একটা অপদার্থ!’— এই কথাটা ছেলেবেলায় মার মুখে অনেকবার শুনেছি। নব কিন্তু কাজ ভালোই করত। দোষের মধ্যে সে ছিল বেজায় ঘুমকাতুরে। দিনের বেলা প্রায়ই একটু টেনে ঘুম দেবার ফলে বিকেলে চায়ের জলটা চড়াতে চারটের জায়গায় হয়ে যেত সাড়ে চারটে। কাজেই মা যে তাকে অপবাদটা দিতেন সেটা ছিল রাগের কথা। কিন্তু সেজকাকার বেলায় অপদার্থ কথাটা যেরকম লাগসই ছিল, সেরকম আর কারুর বেলায় হয়েছে বলে আমার জানা নেই।',
+          'সেজকাকা— মানে যার ভালো নাম ক্ষেত্রমোহন সেন, ডাকনাম খেতু। বাবারা ছিলেন পাঁচ ভাই। বাবাই বড়, তারপর মেজ, সেজ, সোনা আর ছোট। পাঁচের মধ্যে সেজ বাদে আর সকলেই জীবনে প্রতিষ্ঠা লাভ করেছিলেন। বাবা ছিলেন নামকরা উকিল, মেজ সম্মানিত অধ্যাপক— সংস্কৃত আর ইতিহাসে ডাবল এম.এ। সোনা ব্যবসা করে কলকাতায় তিনখানা বাড়ি তুলেছিলেন, আর ছোট কালোয়াতি গানে বড় বড় মুসলমান ওস্তাদদের বাহবা আর ছত্রিশটা সোনা-রুপোর মেডেল পেয়েছিলেন ধনী সমঝদারদের কাছ থেকে। আর সেজকাকা? তাঁকে নিয়েই এই গল্প, তাই তাঁর কথাটা এক কথায় বলা যাবে না।',
+          'সেজকাকার জন্মের মুহূর্তে নাকি ভূমিকম্প হয়েছিল। অনেকের মতে সেই কারণে নাকি তাঁর ঘিলুতে জট পাকিয়ে যায়, আর তাই তাঁর এই দশা। হাম আর চিকেন পক্স একবার না একবার প্রায় সব শিশুদেরই হয়; সেজকাকার এই দুটো তো হয়েইছিল, সেই সঙ্গে কোনো না কোনো সময়ে হয়েছিল হুপিং কাশি, ডিপথিরিয়া, ডেঙ্গু, একজিমা, আসল বসন্ত। শিশু বয়সে সাতবার কাঁদতে কাঁদতে হিঁচকি উঠে নীল হয়ে সেজকাকা অজ্ঞান হয়ে গিয়েছিলেন। সাড়ে ন’য়ে পেয়ারা গাছ থেকে পড়ার সঙ্গে সঙ্গে তাঁর তোতলামো সেরে যায়, কিন্তু এই পতনের ফলে সেজকাকার গোড়ালি ভেঙে যায়। ডাক্তার বিশ্বাস সেটাকে ঠিকমতো জোড়া দিতে না পারায় সেজকাকাকে সামান্য খুঁড়িয়ে হাঁটতে হত।',
+        ],
+        paragraphsEn: [
+          'The word "Apadartho"—good-for-nothing—is often used about many people at many times. Take, for instance, our servant Nabakeshta. "Naba, you are an utter good-for-nothing!"—I heard those words from my mother countless times in childhood. Yet Naba actually did his work quite well; his only flaw was an incurable fondness for sleep. Because he often took a long afternoon nap, putting the kettle on for tea would slip from four o’clock to half-past four. Calling him a good-for-nothing was merely a burst of temper. But in the case of my Sejokaka—my third uncle—the word "Apadartho" fitted as perfectly as it ever could for any human being.',
+          'Sejokaka—whose formal name was Khetromohan Sen, and nickname Khetu. My father and his brothers were five in all: Father was the eldest, followed by Mejo, Sejo, Sona, and Chhoto. Except for Sejo, every single one of them achieved great distinction in life. Father was a celebrated lawyer; Mejo a revered professor with a double M.A. in Sanskrit and History; Sona built three mansions in Calcutta through commerce; and Chhoto won the acclaim of great Muslim maestros in classical music along with thirty-six gold and silver medals. And Sejokaka? This story is about him, so his tale cannot be told in a single sentence.',
+          'At the exact moment of Sejokaka’s birth, there was said to have been an earthquake. Many believed that the tremor tangled the knots in his brain, leaving him the way he was. Most children catch measles and chickenpox once; Sejokaka had both, along with whooping cough, diphtheria, dengue, eczema, and smallpox. Seven times in infancy he cried himself into hiccups, turned blue, and fainted. At nine and a half, falling from a guava tree cured his stammer on the spot, though it fractured his ankle—and since Dr. Biswas failed to set the bone properly, Sejokaka walked with a slight limp for the rest of his life.',
+        ],
+      },
+      {
+        id: 'apadartho-ch-2',
+        number: 2,
+        titleBn: 'দ্বিতীয় পর্ব — সংসারের বাজার ও কালীপুজোর সন্ধ্যা',
+        titleEn: 'Part II · The Market Fiasco & Kali Puja Evening',
+        durationSeconds: 241,
+        durationFormatted: '04:01',
+        narratorNote: 'Dramatic character dialogue for Grandfather and tender childhood recollection.',
+        studioSegmentTimesBn: [
+          [206, 270],
+          [271, 357],
+          [358, 447],
+        ],
+        paragraphsBn: [
+          'সেজকাকা ইস্কুলে ভর্তি হয়েছিলেন ঠিকই, কিন্তু পরপর তিনবার এফ.এ পরীক্ষায় ফেল হওয়ার পর ওঁর বাবা— মানে আমার ঠাকুরদাদা— নিজেই ওঁর পড়াশোনা বন্ধ করে দেন। বলেন— ‘খেতু, তুই যখন একেবারেই অপদার্থ, তখন তোর এডুকেশনের পেছনে খরচ করা মানে টাকা জলে দেওয়া। শোন, তুই আজ থেকে ভোম্বলের সঙ্গে বাজারে যাবি। শাকসবজি, মাছ-মাংস চিনে নিবি, তারপর থেকে সংসারের বাজারটা তুই-ই করবি।’ ঠাকুরদা একদিন সেজকাকার পকেটে দুটো দশ টাকার নোট গুঁজে দিয়ে বললেন— ‘দেখি তুই কেমন জিনিসপত্র চিনেছিস! আজ বাজারের ভার তোর ওপর, যা!’',
+          'সেজকাকাকে দিয়ে বাজার আর হল না, কারণ কাকার পাঞ্জাবির পকেটে ফুটো! নোট দুখানা বাজারে পৌঁছনোর আগেই পথে কোথায় গলে পড়েছে। আচ্ছা আপনারাই বলুন, এরপর থেকে কে আর কাকাকে ট্রাস্ট করবে? আমার প্রথম স্মৃতিতে সেজকাকার বয়স তেত্রিশ আর আমার তিন। কালীপুজোর দিন সন্ধ্যেবেলা— সেজকাকা বারান্দার মেঝেতে হামাগুড়ি দিচ্ছেন আর আমি তাঁর পিঠে চড়ে ঘোড়া-ঘোড়া খেলছি। পাশের বাড়ি থেকে হঠাৎ একটা জ্বলন্ত উড়ন তুবড়ি এসে বারান্দার তক্তপোশের উপর পড়তেই ‘সর্বনাশ!’ বলে সেজকাকা সটান উঠে দাঁড়ালেন। তার ফলে আমি পিঠ থেকে ছিটকে পড়লাম শান বাঁধানো মেঝেতে, আর সঙ্গে সঙ্গে মাথা ফেটে রক্তারক্তি কাণ্ড!',
+          'আমার কিন্তু একটু দুঃখ হয়েছিল কাকার জন্য। কেউ তাঁকে গ্রাহ্য করে না, এমনকী মানুষের মধ্যেই ধরে না। তাই বয়সের সঙ্গে সঙ্গে আমার কাকার উপর একটা মায়া পড়ে গিয়েছিল। মাঝারি হাইট, মাঝারি রং, মুখে সবসময়ই একটা খুশি আর দুঃখ মেশানো ভাব। আমি ফাঁক পেলেই তাঁর একতলার কোণের ঘরটায় গিয়ে বসে গল্প করতাম। কিন্তু সেজকাকাকে গল্প বলতে বলে কোনো লাভ নেই, কারণ তাঁর কোনো গল্পই শেষ পর্যন্ত মনে থাকে না— ‘তারপর... তারপর...’ বলতে বলতে গলার স্বর দম ফুরানো হারমোনিয়ামের মতো ক্ষীণ হয়ে আসে, আর শেষটায় কাকার মাথাটা ঘুমে ঢুলতে থাকে।',
+        ],
+        paragraphsEn: [
+          'Sejokaka was enrolled in school, to be sure, but after he failed his F.A. examination three times in a row, his father—my grandfather—put an end to his education himself. He declared, "Khetu, since you are a complete good-for-nothing, spending money on your schooling is throwing cash into water. Listen: from today you will go to the market with Bhombol, learn to recognize vegetables, fish, and meat, and do the household shopping." One day Grandfather tucked two ten-rupee notes into Sejokaka’s pocket and said, "Let’s see how well you’ve learned! Today the market is your responsibility—off you go!"',
+          'Household shopping through Sejokaka ended before it began, because there was a hole in the pocket of his punjabi! Both banknotes slipped through onto the street before he even reached the bazaar. Tell me honestly, who would trust him after that? In my earliest memory, Sejokaka was thirty-three and I was three. On Kali Puja evening, Sejokaka was crawling on the verandah floor while I rode on his back playing horsey. Suddenly a blazing skyrocket from next door landed on the wooden divan; shouting "Good heavens!", Sejokaka sprang upright, flinging me onto the stone floor and splitting my forehead open.',
+          'Even then, I felt a quiet sorrow for my uncle. Nobody took him seriously or even counted him among capable human beings. As I grew older, a deep fondness for him took root in me. Of medium height and medium complexion, his face always carried a mingled expression of joy and melancholy. Whenever I found a spare moment, I visited his corner room on the ground floor to chat. Asking Sejokaka to tell a story was fruitless, however—he never remembered how any story ended, and his voice would trail off repeating "And then... and then..." like a harmonium running out of air until his head nodded off to sleep.',
+        ],
+      },
+      {
+        id: 'apadartho-ch-3',
+        number: 3,
+        titleBn: 'তৃতীয় পর্ব — আয়ুর্বেদ চর্চা ও ভটচাজপাড়ার জোঁক',
+        titleEn: 'Part III · The Ayurveda Cure & The Fourteen Leeches',
+        durationSeconds: 236,
+        durationFormatted: '03:56',
+        narratorNote: 'Intimate conversational pacing building to the comic misadventure in the monsoon bushes.',
+        studioSegmentTimesBn: [
+          [448, 532],
+          [533, 608],
+          [609, 684],
+        ],
+        paragraphsBn: [
+          'আমার যখন বছর বারো বয়স, তখন একদিন তাঁর ঘরে গিয়ে দেখি তিনি একটা মোটা বই খুলে খুব মনোযোগ দিয়ে পড়ছেন। জিজ্ঞেস করাতে বললেন— আয়ুর্বেদের বই। কাকা একটু ভেবে গম্ভীরভাবে বললেন, ‘এটাও তো একটা ব্যামো, তাই না? এই যে আমার দ্বারা কিচ্ছু হচ্ছে না, কিচ্ছু মনে থাকে না, কিচ্ছু মাথায় ঢোকে না— এটা নিশ্চয়ই একটা রোগ। চকবাজারের ফুটপাথে বইটা পড়েছিল, দশ আনা দিয়ে কিনে এনেছি। মনে হচ্ছে আমার ব্যামোর জন্য আয়ুর্বেদিক চিকিৎসা আছে, বুঝলি?’',
+          'দুদিন বাদে— তখন বর্ষাকাল— বিকেলে সেজকাকার ঘরে গিয়ে দেখি উনি বেরোবার তোড়জোড় করছেন। পায়ে ক্যাম্বিসের জুতো, মালকোঁচা মেরে পরা ধুতি, গলায় জড়ানো সুতির চাদর আর হাতে ছাতা। বললেন— ‘ভটচাজপাড়ায় ভাঙা শিবমন্দিরটার পিছনে একটা গাছ আছে খবর পেয়েছি, তার শিকড় আমার চাই। ওইটে পেলেই না— ব্যস, নিশ্চিন্তি!’ সেজকাকা বেরিয়ে পড়লেন। সন্ধ্যে যখন হব-হব, তখন দেখি সেজকাকা ফিরছেন।',
+          '‘পেলে শিকড়?’ ‘নারে, ভুল হয়ে গেল একটা। একটা টর্চ নিয়ে যাওয়া উচিত ছিল, জায়গাটা জংলা আর বেজায় অন্ধকার।’ কিন্তু কাকার খদ্দরের পাঞ্জাবির বুকে লাল রঙের ছোপ! পাঞ্জাবি খুলতেই বেরোল একটা জোঁক— ভীম যেমন দুর্যোধনের বুকের রক্ত খেয়েছিল, তেমনই ইনি সেজকাকার বুকের রক্ত খেয়ে ফুলে ঢোল! কাঁধ, কনুই, কোমর, পায়ের গুলি, হাঁটু, গোড়ালি— সব জায়গা মিলিয়ে চৌদ্দটা জোঁক বেরোল কাকার গা থেকে। বলাই বাহুল্য, তাঁর আয়ুর্বেদ চর্চাও এই একটি ঘটনাই দিল বন্ধ করে।',
+        ],
+        paragraphsEn: [
+          'When I was twelve, I walked into his room one day and found him poring intently over a thick volume. When I asked, he said it was a treatise on Ayurveda. Pausing thoughtfully, he said in a solemn voice, "This too is an ailment, isn’t it? The fact that I can’t accomplish anything, can’t remember anything, can’t get anything into my head—surely it’s an illness. This book was lying on the pavement at Chowkbazar; I bought it for ten annas. I believe Ayurveda has a cure for my condition, you see."',
+          'Two days later—it was the middle of the monsoon—I found Sejokaka preparing to go out in the afternoon, wearing canvas shoes, a tucked-up dhoti, a cotton shawl around his neck, and carrying an umbrella. He whispered, "I’ve heard there is a rare shrub behind the ruined Shiva temple in Bhatchajpara, and I need its root. Once I get that—my worries are over!" Sejokaka set off under an overcast sky and returned just as dusk was falling.',
+          '"Did you find the root?" "No, my boy, I made a mistake. I should have carried a torch; the place is overgrown and pitch dark." Just then my eyes fell on a bright crimson stain across the chest of his khaddar punjabi. When he took it off, out came a leech—bloated like a drum from drinking Sejokaka’s blood! From his shoulders, elbows, waist, calves, knees, and ankles, fourteen leeches in all were plucked from his body. Needless to say, that single expedition ended his Ayurvedic studies forever.',
+        ],
+      },
+      {
+        id: 'apadartho-ch-4',
+        number: 4,
+        titleBn: 'চতুর্থ পর্ব — শিকাগো প্রবাস ও স্বামী বিবেকানন্দের ভূমিকা',
+        titleEn: 'Part IV · Chicago & The Role of Swami Vivekananda',
+        durationSeconds: 218,
+        durationFormatted: '03:38',
+        narratorNote: 'Reflective passage of time as the narrator becomes a physicist in Chicago.',
+        studioSegmentTimesBn: [
+          [685, 755],
+          [756, 808],
+          [809, 903],
+        ],
+        paragraphsBn: [
+          'পড়াশোনায় আমি ছিলাম রীতিমতো ভালো। পরীক্ষায় বিশ্ববিদ্যালয়ে থার্ড হয়ে বিজ্ঞান পড়ব বলে চলে এলাম কলকাতায়। হস্টেলে থেকেই এম.এস.সি পর্যন্ত পড়ে পদার্থবিজ্ঞানে ফার্স্ট ক্লাস ফার্স্ট হয়ে চলে যাই আমেরিকায়। শেষ পর্যন্ত গবেষক হিসেবে আমার বেশ খ্যাতি হয়; শিকাগো বিশ্ববিদ্যালয়ে অধ্যাপক ও গবেষণার কাজ আমি একসঙ্গে চালাতে থাকি। বাইরে থাকার ফলে সেজকাকার সঙ্গে যোগসূত্র ক্ষীণ হয়ে এসেছিল।',
+          'একবার মার চিঠিতে এক অদ্ভুত খবর পেলাম— সেজকাকা নাকি ফিল্মে অভিনয়ের সুযোগ পেয়েছেন! সেজকাকার সঙ্গে স্বামী বিবেকানন্দের চেহারার একটা সাদৃশ্য ছিল; নাক, চোখ, মুখের সাদৃশ্য সকলের চোখেই ধরা পড়ত। পরমহংসদেব সম্বন্ধে একটা ফিল্ম তোলা হবে এবং তাতে বিবেকানন্দের ভূমিকা আছে খবর পেয়ে সেজকাকা নাকি সরাসরি প্রযোজকের সঙ্গে দেখা করে পার্টটা পেয়ে যান। কিন্তু হপ্তাখানেক বাদেই জানলাম কাকা ছবি থেকে বাদ হয়ে গেছেন— এক নম্বর দৃশ্যে শ্রীরামকৃষ্ণের কথার উত্তরে বিবেকানন্দের মুখ থেকে যদি তিন নম্বর দৃশ্যের উত্তর বেরিয়ে পড়ে, তাহলে আর তাঁকে দিয়ে কীভাবে কাজ চলে?',
+          'আমার যখন আটচল্লিশ বছর বয়স, ছোট ভাইয়ের চিঠিতে জানি সেজকাকা এক সাধু বাবার শিষ্য হয়ে কোয়েম্বাটোর চলে গেছেন। গত বছর ডিসেম্বরের গোড়ায় আমার ছোটকাকার মেয়ে কাকলির বিয়েতে আমাকে কলকাতায় আসতে হয়। শুনলাম ফার্ন রোডে তাঁর ভাগ্নে ডাক্তার রণেশ গুপ্তর বাড়িতে এসে তিনি উঠেছেন মাস তিনেক হল। ধর্মকর্ম ব্যাপারটা মোটেই তাঁর ধাতে সয়নি; দশ বছরেও ইডলি-দোসায় অভ্যাস হয়নি। আমি এসেছি শুনে তিনি বলে পাঠিয়েছেন— ‘ঝন্টুকে বলিস একবার যেন এসে আমার সঙ্গে দেখা করে যায়।’',
+        ],
+        paragraphsEn: [
+          'I was always a strong student. After placing third in the university matriculation exams, I moved to Calcutta to study science, earned a First Class First in M.Sc. Physics while living in a hostel, and left for America. Eventually I gained recognition as a researcher and held a professorship at the University of Chicago. Living abroad, my connection with Sejokaka gradually grew faint.',
+          'Once, just after I had begun teaching, a letter from Mother brought astonishing news: Sejokaka had landed a role in a motion picture! His nose, eyes, and facial features bore a striking resemblance to Swami Vivekananda. Hearing that a film on Sri Ramakrishna was in production, Sejokaka approached the producer directly and was cast on the spot. A week later, however, another letter informed me that he had been dropped—for if Vivekananda replies to Ramakrishna in Scene One by blurting out his lines from Scene Three, how could the shoot possibly proceed?',
+          'When I was forty-eight, a letter from my younger brother mentioned that Sejokaka had become the disciple of a holy man and gone off to Coimbatore. Last December, I returned to Calcutta at age sixty for my cousin Kakoli’s wedding and learned that ninety-year-old Sejokaka was alive and staying on Fern Road with his nephew, Dr. Ranesh Gupta. Ascetic life and ten years of idli-dosa had not suited him at all. Hearing of my arrival, he sent word: "Tell Jhantu to come and see me once."',
+        ],
+      },
+      {
+        id: 'apadartho-ch-5',
+        number: 5,
+        titleBn: 'পঞ্চম পর্ব — ফার্ন রোডের মোমবাতি ও আসল অপদার্থ',
+        titleEn: 'Part V · Candlelight on Fern Road & The Final Irony',
+        durationSeconds: 259,
+        durationFormatted: '04:19',
+        narratorNote: 'Poignant, spirited finale in the candlelit room on Fern Road.',
+        studioSegmentTimesBn: [
+          [907, 982],
+          [983, 1093],
+          [1094, 1166],
+        ],
+        paragraphsBn: [
+          'এক রবিবার সন্ধ্যায় গিয়ে হাজির হলাম ফার্ন রোডে। লোডশেডিং চলছে। দোতলার একটি ঘরে টিমটিমে মোমবাতি জ্বালিয়ে তাকিয়ায় ঠেস দিয়ে খাটের উপর বসে আছেন নব্বই বছরের সেজকাকা। একটা মটকার চাদরের উপর গলায় প্যাঁচ দিয়ে জড়ানো সবুজ মাফলার। আমায় দেখে হাসিতে মুখ ফাঁক হওয়াতে অরিজিনাল দাঁতও চোখে পড়ল ডজনখানেক। আর যখন কথা বেরোল, তখন দেখলাম গলার স্বর ক্ষীণ হলেও কথায় বেশ তেজ আছে। তিনি যে সকলের বয়োজ্যেষ্ঠ, তাঁকে আর কারুর কাছে মাথা নোয়াতে হয় না— এই বোধই হয়তো তাঁর মেজাজে একটা ভারিক্কি ভাব এনে দিয়েছে।',
+          '‘কীরে ঝন্টু, মার্কিন মুলুকে গিয়ে কী করা হচ্ছে শুনি? পদার্থবিজ্ঞান? গবেষণা? বটে! নোবেল প্রাইজ পেয়েছিস কি না সেটা বল আগে!’ আমি হালকা হেসে মাথা নাড়লাম। ‘তবে আর কীসের বড়াই? একেবারে অপদার্থ! তুই তো যা হোক ভিন মুলুকে পালিয়ে বাঁচলি, আমি ভাবলুম কলকাতায় গিয়ে একটু স্বস্তি মিলবে। তা এসব কী হচ্ছে বল তো? শকুনির ঠোকরে তো হাড়-মজ্জা বার করে দিয়েছে শহরটার! দিনে দশ ঘণ্টা বিজলি নেই, শ্বাস টানলে ধোঁয়া-ধুলোয় প্রাণ অতিষ্ঠ, জিনিসপত্রের যা দর— ধুর ধুর ধুর ধুর! অপদার্থ, অপদার্থ!’',
+          'সেদিন বুঝলাম সেজকাকার উপর থেকে আমার পুরনো টানটা এখনও যায়নি। মনে হল আমরা বোধহয় এতদিন ভুল করে এসেছি, উল্টো ভেবে এসেছি— আসলে কাকা দিব্যি সুস্থ স্বাভাবিক মানুষ, আমরা শুদ্ধ দুনিয়াটাই অপদার্থ! কিন্তু কথাটা যে ঠিক নয়, সেটা সেজকাকাই প্রমাণ করে দিলেন কয়েক দিনের মধ্যে। এক সকালে ফোন এল সেজকাকা ভোররাত্রে ইহলোক ত্যাগ করে চলে গেছেন। আর যাওয়ার দিনটাও মোক্ষম বেছেছেন কাকা— কারণ সেদিনই সন্ধ্যায় গোধূলি লগ্নে আমার ভাগ্নির বিয়ে।',
+        ],
+        paragraphsEn: [
+          'One Sunday evening I arrived at Fern Road during a power cut. In an upstairs room lit by a flickering candle, ninety-year-old Sejokaka sat propped against a bolster on the bed, a green muffler wound over his coarse silk shawl. When he smiled at the sight of me, agood dozen original teeth were still visible; and when he spoke, though his voice was thin, it rang with unmistakable spirit. Now the eldest of the entire family with no one left to bow before, he carried a newfound gravity.',
+          '"Well, Jhantu, what have you been up to in America? Physics? Research? Is that so! Tell me first—have you won the Nobel Prize yet?" I smiled faintly and shook my head. "Then what is there to boast about? Utterly Apadartho—good-for-nothing! At least you escaped to a foreign land; I thought returning to Calcutta would bring me peace. Instead, look what they’ve done to this city! Ten hours a day without electricity, smoke and dust choking every breath, prices through the roof—bah! Apadartho, the lot of them!"',
+          'That evening I realized my old affection for Sejokaka had never faded. For a moment I felt we had been mistaken all our lives—that Uncle was the only sane, natural human being, and the rest of the world was good-for-nothing! Yet within a few days, Sejokaka himself proved me wrong. Early one morning a phone call came: Sejokaka had passed away at dawn. And he had chosen the most impeccable day to depart—for that very evening, at the auspicious hour of twilight, was my niece’s wedding.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'pather-panchali',
     accessionNumber: 'BG-1929-UPN-001',
     titleBn: 'পথের পাঁচালী',
@@ -217,8 +379,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '6h 42m',
     totalDurationSeconds: 24120,
     narratorVoice: 'Charon',
-    narratorNameBn: 'সৌমিত্র শর্মা (গভীর প্রশান্ত ব্যারিটোন)',
-    narratorNameEn: 'Soumitra Sharma · Deep Soothing Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'pather_panchali',
     palette: {
       bg: '#1E293B',
@@ -357,8 +519,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '3h 15m',
     totalDurationSeconds: 11700,
     narratorVoice: 'Orus',
-    narratorNameBn: 'দেবব্রত বিশ্বাসী (শান্ত গভীর ব্যারিটোন)',
-    narratorNameEn: 'Debabrata Biswasi · Soothing Velvet Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'gitanjali',
     palette: {
       bg: '#1E3A8A',
@@ -493,8 +655,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '4h 18m',
     totalDurationSeconds: 15480,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'সব্যসাচী সেন (গম্ভীর নাটকীয় ব্যারিটোন)',
-    narratorNameEn: 'Sabyasachi Sen · Resonant Male Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'sonar_kella',
     palette: {
       bg: '#78350F',
@@ -627,8 +789,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '4h 55m',
     totalDurationSeconds: 17700,
     narratorVoice: 'Charon',
-    narratorNameBn: 'রুদ্রপ্রসাদ মিত্র (ধ্রুপদী গম্ভীর ব্যারিটোন)',
-    narratorNameEn: 'Rudraprasad Mitra · Deep Classical Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'kapalkundala',
     palette: {
       bg: '#14532D',
@@ -759,8 +921,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '2h 50m',
     totalDurationSeconds: 10200,
     narratorVoice: 'Orus',
-    narratorNameBn: 'অনির্বাণ চট্টোপাধ্যায় (শান্ত ও স্নিগ্ধ ব্যারিটোন)',
-    narratorNameEn: 'Anirban Chattopadhyay · Warm Soothing Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'sultanas_dream',
     palette: {
       bg: '#312E81',
@@ -889,8 +1051,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '1h 45m',
     totalDurationSeconds: 6300,
     narratorVoice: 'Charon',
-    narratorNameBn: 'পরান বন্দ্যোপাধ্যায় (উষ্ণ ব্যারিটোন ছন্দ)',
-    narratorNameEn: 'Paran Bandyopadhyay · Warm Storyteller Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'abol_tabol',
     palette: {
       bg: '#9A3412',
@@ -1017,8 +1179,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '2h 30m',
     totalDurationSeconds: 9000,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'কাজী আরিফ (গভীর ওজস্বী ব্যারিটোন)',
-    narratorNameEn: 'Kazi Arif · Deep Resonant Bass-Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'bidrohi',
     palette: {
       bg: '#7F1D1D',
@@ -1141,8 +1303,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '2h 12m',
     totalDurationSeconds: 7920,
     narratorVoice: 'Orus',
-    narratorNameBn: 'শমীক মুখোপাধ্যায় (স্বপ্নময় গভীর ব্যারিটোন)',
-    narratorNameEn: 'Shamik Mukhopadhyay · Soothing Twilight Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'banalata_sen',
     palette: {
       bg: '#1F2937',
@@ -1267,8 +1429,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '5h 10m',
     totalDurationSeconds: 18600,
     narratorVoice: 'Charon',
-    narratorNameBn: 'দেবেশ রায়চৌধুরী (অন্তরঙ্গ গভীর ব্যারিটোন)',
-    narratorNameEn: 'Debesh Raychaudhuri · Deep Intimate Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'kabuliwala',
     palette: {
       bg: '#44403C',
@@ -1397,8 +1559,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '5h 30m',
     totalDurationSeconds: 19800,
     narratorVoice: 'Fenrir',
-    narratorNameBn: 'কৌশিক সেন (গম্ভীর ব্যারিটোন পাঠ)',
-    narratorNameEn: 'Kaushik Sen · Deep Grounded Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'padma_nadir_majhi',
     palette: {
       bg: '#0F172A',
@@ -1525,8 +1687,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '3h 40m',
     totalDurationSeconds: 13200,
     narratorVoice: 'Charon',
-    narratorNameBn: 'অরিন্দম শীল (রহস্যময় গভীর ব্যারিটোন)',
-    narratorNameEn: 'Arindam Sil · Noir Baritone Narrator',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'byomkesh',
     palette: {
       bg: '#27272A',
@@ -1649,8 +1811,8 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
     totalDurationFormatted: '2h 05m',
     totalDurationSeconds: 7500,
     narratorVoice: 'Orus',
-    narratorNameBn: 'শঙ্খ ঘোষাল (মননশীল গভীর ব্যারিটোন)',
-    narratorNameEn: 'Shankha Ghoshal · Reflective Deep Baritone',
+    narratorNameBn: 'অগ্নি (শ্রুতি-গল্প কথক · Friday Classics Style)',
+    narratorNameEn: 'Agni · Classic Bangla Storyteller',
     coverMotif: 'devdas',
     palette: {
       bg: '#292524',
