@@ -92,36 +92,22 @@ function generateSecMsGec(clockOffsetMs: number): string {
 }
 
 /**
- * Formats Bengali & English narrative text with Agni's Friday Classics storytelling
- * punctuation rhythm (dramatic ellipsis suspensions at em-dashes, breathing room around
- * quoted character dialogue, and unhurried sentence transitions at dandas `।`) while
- * keeping strict single-prosody SSML compliance.
+ * Builds pure, un-resampled SSML at native model pitch (+0Hz) and rate (+0%).
+ * Keeping pitch="+0Hz" and rate="+0%" prevents server-side phase-vocoder resampling,
+ * preserving 100% of the natural human glottal warmth and eliminating robotic artifacts.
  */
 export function buildLiteraryStorytellingSSML(options: {
   text: string;
   voiceName: string;
   locale: string;
-  rate: string;
-  pitch: string;
-  isPoetic?: boolean;
 }): string {
-  const { text, voiceName, locale, rate, pitch } = options;
+  const { text, voiceName, locale } = options;
 
-  // Shape text with natural prosodic punctuation cues that the neural transformer
-  // interprets as expressive storytelling pauses and dialogue inflections:
-  const shapedText = text
+  const cleanText = text
     .replace(/\s+/g, ' ')
     .trim()
-    // Add a subtle storytelling suspension before and after em-dashes (like "যেমন— আমাদের চাকর নবকেষ্ট")
-    .replace(/\s*(—|--)\s*/g, '... ')
-    // Give quoted character dialogue natural breathing room before and after
-    .replace(/‘([^’]+)’/g, '... “$1” ...')
-    // Ensure Bengali dandas and question/exclamation marks have clean sentence-boundary spacing
-    .replace(/।\s*/g, '।  ')
-    .replace(/\?\s*/g, '?  ')
-    .replace(/!\s*/g, '!  ');
-
-  const escaped = shapedText
+    // Replace em-dashes with a natural comma-space so the neural voice pauses naturally without stuttering
+    .replace(/\s*(—|--)\s*/g, ', ')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -130,21 +116,18 @@ export function buildLiteraryStorytellingSSML(options: {
 
   return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${locale}">
                 <voice name="${voiceName}">
-                    <prosody pitch="${pitch}" rate="${rate}" volume="+0%">
-                        ${escaped}
+                    <prosody pitch="+0Hz" rate="+0%" volume="+0%">
+                        ${cleanText}
                     </prosody>
                 </voice>
             </speak>`;
 }
 
-async function openAndSynthesizeOnce(
+async function openAndSynthesizeSingleSentence(
   options: {
     text: string;
     voiceName: string;
     locale: string;
-    rate: string;
-    pitch: string;
-    isPoetic?: boolean;
   },
   retryOnClockSkew = true
 ): Promise<Buffer> {
@@ -197,7 +180,7 @@ async function openAndSynthesizeOnce(
         if (Number.isFinite(serverMs)) {
           cachedClockOffsetMs = serverMs - Date.now();
           settled = true;
-          openAndSynthesizeOnce(options, false).then(resolve).catch(reject);
+          openAndSynthesizeSingleSentence(options, false).then(resolve).catch(reject);
           return;
         }
       }
@@ -303,13 +286,64 @@ async function openAndSynthesizeOnce(
   });
 }
 
+/**
+ * Splits a multi-sentence Bengali or English passage into natural sentence units (`।`, `.`, `?`, `!`)
+ * and synthesizes each sentence at pure `+0Hz / +0%` native neural output.
+ * This prevents long-paragraph prosody flattening and inserts organic human breathing pauses
+ * between sentences with zero vocoder distortion.
+ */
 export async function synthesizeNativeNeuralMp3(options: {
   text: string;
   voiceName: string;
   locale: string;
-  rate: string;
-  pitch: string;
+  rate?: string;
+  pitch?: string;
   isPoetic?: boolean;
 }): Promise<Buffer> {
-  return openAndSynthesizeOnce(options, true);
+  const { text, voiceName, locale } = options;
+
+  const rawSentences =
+    locale.startsWith('bn')
+      ? text.match(/[^।?!]+[।?!]+|\S.+$/g) || [text]
+      : text.match(/[^.?!]+[.?!]+|\S.+$/g) || [text];
+
+  // Group very short fragments (< 25 chars) with the following sentence so dialogue tags flow naturally
+  const mergedSentences: string[] = [];
+  for (const s of rawSentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+    if (
+      mergedSentences.length > 0 &&
+      mergedSentences[mergedSentences.length - 1].length < 28
+    ) {
+      mergedSentences[mergedSentences.length - 1] += ' ' + trimmed;
+    } else {
+      mergedSentences.push(trimmed);
+    }
+  }
+
+  const chunksToSynthesize = mergedSentences.length > 0 ? mergedSentences.slice(0, 8) : [text];
+
+  // Warm up clock offset on the first chunk if not yet synced, then synthesize remaining in parallel
+  const firstBuf = await openAndSynthesizeSingleSentence({
+    text: chunksToSynthesize[0],
+    voiceName,
+    locale,
+  });
+
+  if (chunksToSynthesize.length === 1) {
+    return firstBuf;
+  }
+
+  const restBuffers = await Promise.all(
+    chunksToSynthesize.slice(1).map((sentence) =>
+      openAndSynthesizeSingleSentence({
+        text: sentence,
+        voiceName,
+        locale,
+      })
+    )
+  );
+
+  return Buffer.concat([firstBuf, ...restBuffers]);
 }

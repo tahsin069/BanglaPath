@@ -34,7 +34,6 @@ import {
   BARITONE_VOICE_PRESETS,
   MaleNarratorPersona,
   playBaritoneMasteredAudio,
-  playStudioMp3Segment,
 } from '@/lib/baritone-audio-engine';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
@@ -458,45 +457,10 @@ export default function BanglaGranthaApp() {
       const preset = BARITONE_VOICE_PRESETS[activePersona] || BARITONE_VOICE_PRESETS['deep-baritone'];
 
       setCurrentlySpeakingLang(lang);
-
-      // 1. Direct Studio Recording Playback when the book has Agni's studio MP3 timestamps (e.g., Satyajit Ray's "Apadartho")
-      const chapterObj = bookForVoice.chapters[chNumber - 1];
-      const studioTimes = chapterObj?.studioSegmentTimesBn?.[paraIdx];
-      if (lang === 'bn' && bookForVoice.studioAudioUrl && studioTimes) {
-        setIsLoadingAudio(false);
-        setEngineNotice(
-          `গল্প পাঠে: অগ্নি (ফ্রাইডে ক্লাসিকস স্টুডিও সংস্করণ) · Studio Voice: Agni · Ch ${chNumber}, Passage 0${paraIdx + 1}`
-        );
-
-        try {
-          const studioController = await playStudioMp3Segment({
-            audioUrl: bookForVoice.studioAudioUrl,
-            startTimeSec: studioTimes[0],
-            endTimeSec: studioTimes[1],
-            playbackSpeed,
-            isMuted,
-            onEnded: () => {
-              if (sessionId === playbackSessionRef.current) {
-                onComplete();
-              }
-            },
-            onError: () => {
-              if (sessionId === playbackSessionRef.current) {
-                onComplete();
-              }
-            },
-          });
-          baritoneControllerRef.current = studioController;
-          return;
-        } catch {
-          // Fall through to neural storyteller synthesis if studio file fails to seek
-        }
-      }
-
       setIsLoadingAudio(true);
       setEngineNotice(
         lang === 'bn'
-          ? `গল্প পাঠে: অগ্নি প্রস্তুত হচ্ছে (${preset.labelBn}) · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
+          ? `স্বাভাবিক বাংলা পুরুষ কণ্ঠে পাঠ প্রস্তুত হচ্ছে · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
           : `Synthesizing ${preset.labelEn} Narration · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
       );
 
