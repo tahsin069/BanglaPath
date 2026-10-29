@@ -128,6 +128,13 @@ export default function BanglaGranthaApp() {
     0
   );
 
+  // Calculate current global passage index across all chapters (0 .. totalBookPassages - 1)
+  const currentGlobalPassageIdx =
+    activeBook.chapters
+      .slice(0, activeChapterIdx)
+      .reduce((sum, ch) => sum + Math.max(ch.paragraphsBn.length, ch.paragraphsEn.length), 0) +
+    activeParagraphIdx;
+
   // Load URL deep-link params (?book=...&chapter=...&lang=...) or saved progress from localStorage
   useEffect(() => {
     const hydrateTimer = window.setTimeout(() => {
@@ -951,6 +958,64 @@ export default function BanglaGranthaApp() {
     return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
   };
 
+  // Movable MP3 Slider Handler 1: Skip directly from one Chapter to another Chapter
+  const handleSliderChapterJump = (targetChIdx: number, playImmediately = false) => {
+    const clampedCh = Math.max(0, Math.min(activeBook.chapters.length - 1, targetChIdx));
+    stopAllAudio();
+    setActiveChapterIdx(clampedCh);
+    setActiveParagraphIdx(0);
+    setElapsedSeconds(0);
+    if (isPlaying || playImmediately) {
+      startPlayback(0, audioLangMode, clampedCh, activeBook);
+    }
+  };
+
+  // Movable MP3 Slider Handler 2: Scrub continuously across all Chapters & Passages of the book
+  const handleSliderGlobalPassageScrub = (targetGlobalIdx: number, playImmediately = false) => {
+    const clampedGlobal = Math.max(0, Math.min(totalBookPassages - 1, targetGlobalIdx));
+    let running = 0;
+    let resolvedChIdx = 0;
+    let resolvedParaIdx = 0;
+
+    for (let c = 0; c < activeBook.chapters.length; c++) {
+      const chLen = Math.max(
+        activeBook.chapters[c].paragraphsBn.length,
+        activeBook.chapters[c].paragraphsEn.length
+      );
+      if (clampedGlobal < running + chLen) {
+        resolvedChIdx = c;
+        resolvedParaIdx = clampedGlobal - running;
+        break;
+      }
+      running += chLen;
+    }
+
+    stopAllAudio();
+    setActiveChapterIdx(resolvedChIdx);
+    setActiveParagraphIdx(resolvedParaIdx);
+    setElapsedSeconds(0);
+    if (isPlaying || playImmediately) {
+      startPlayback(resolvedParaIdx, audioLangMode, resolvedChIdx, activeBook);
+    }
+  };
+
+  const featuredWritersQuickList = [
+    { labelBn: 'হুমায়ূন আহমেদ', labelEn: 'Humayun Ahmed', query: 'Humayun Ahmed' },
+    { labelBn: 'জসীমউদ্দীন', labelEn: 'Joshim Uddin', query: 'Joshim Uddin' },
+    { labelBn: 'জাফর ইকবাল', labelEn: 'Jafar Iqbal', query: 'Jafar Iqbal' },
+    { labelBn: 'আহসান হাবীব', labelEn: 'Ahsan Habib', query: 'Ahsan Habib' },
+    { labelBn: 'প্রমথ চৌধুরী', labelEn: 'Promoth Chowdhury', query: 'Promoth Chowdhury' },
+    { labelBn: 'জাহানারা ইমাম', labelEn: 'Jahanara Imam', query: 'Jahanara Imam' },
+    { labelBn: 'হুমায়ুন আজাদ', labelEn: 'Humayun Azad', query: 'Humayun Azad' },
+    { labelBn: 'শামসুর রাহমান', labelEn: 'Shamsur Rahman Khan', query: 'Shamsur Rahman' },
+    { labelBn: 'সুফিয়া কামাল', labelEn: 'Sufia Kamal', query: 'Sufia Kamal' },
+    { labelBn: 'মাইকেল মধুসূদন দত্ত', labelEn: 'Michel Madhushudan Datt', query: 'Madhusudan' },
+    { labelBn: 'আল মাহমুদ', labelEn: 'Al Mahmud', query: 'Al Mahmud' },
+    { labelBn: 'সৈয়দ ওয়ালীউল্লাহ', labelEn: 'Syed Waliullah', query: 'Syed Waliullah' },
+    { labelBn: 'জহির রায়হান', labelEn: 'Zahir Raihan', query: 'Zahir Raihan' },
+    { labelBn: 'আখতারুজ্জামান ইলিয়াস', labelEn: 'Akhtaruzzaman Elias', query: 'Akhtaruzzaman Elias' },
+  ];
+
   const paperStyles: Record<
     PaperTheme,
     { bg: string; text: string; muted: string; border: string; highlight: string }
@@ -1041,6 +1106,172 @@ export default function BanglaGranthaApp() {
           </button>
         </div>
       </header>
+
+      {/* PROMINENT TOP SEARCH BAR & RENOWNED BANGLADESHI WRITERS QUICK-ACCESS HUB */}
+      <section
+        aria-label="Global Book & Author Search"
+        className="px-6 lg:px-12 py-5 bg-[#F3EFE6] border-b border-stone-300 shadow-xs"
+      >
+        <div className="max-w-[1320px] mx-auto">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="w-5 h-5 text-[#9A3412] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="search"
+                value={catalogSearch}
+                onChange={(e) => {
+                  setCatalogSearch(e.target.value);
+                  setSelectedGenre('all');
+                }}
+                placeholder="Search any book or writer: Humayun Ahmed, Joshim Uddin, Jafar Iqbal, Lalsalu, Nakshi Kanthar Math, হিমু..."
+                className="w-full pl-12 pr-28 py-3.5 text-sm sm:text-base bg-[#FBF9F5] border-2 border-stone-300 hover:border-stone-400 focus:border-[#9A3412] rounded-xl text-stone-900 placeholder:text-stone-500 focus:outline-none transition-colors shadow-2xs"
+              />
+              {catalogSearch.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setCatalogSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 text-xs font-medium text-stone-700 bg-stone-200 hover:bg-stone-300 rounded-md transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-3.5 text-xs sm:text-sm font-medium text-white bg-[#9A3412] hover:bg-[#7C2D12] rounded-xl transition-colors whitespace-nowrap"
+              >
+                Browse {filteredBooks.length} Matching Books
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (catalogSearch.trim()) {
+                    setFederatedQuery(catalogSearch.trim());
+                  }
+                  document
+                    .getElementById('federated-sources')
+                    ?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-4 py-3.5 text-xs sm:text-sm font-medium text-stone-800 bg-[#FBF9F5] border border-stone-300 hover:border-stone-500 rounded-xl transition-colors whitespace-nowrap"
+              >
+                Global Archives
+              </button>
+            </div>
+          </div>
+
+          {/* Quick-Select Renowned Bangladeshi & Classic Bengali Writers Bar */}
+          <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-1">
+            <span className="text-xs font-semibold text-stone-700 whitespace-nowrap mr-1">
+              Renowned Writers:
+            </span>
+            {featuredWritersQuickList.map((writer) => {
+              const isSelectedWriter =
+                catalogSearch.toLowerCase() === writer.query.toLowerCase();
+              return (
+                <button
+                  key={writer.query}
+                  type="button"
+                  onClick={() => {
+                    setSelectedGenre('all');
+                    setCatalogSearch((prev) =>
+                      prev.toLowerCase() === writer.query.toLowerCase() ? '' : writer.query
+                    );
+                  }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
+                    isSelectedWriter
+                      ? 'bg-[#9A3412] text-white border-[#9A3412]'
+                      : 'bg-[#FBF9F5] text-stone-800 border-stone-300 hover:border-[#9A3412]'
+                  }`}
+                >
+                  <span className="font-[family-name:var(--font-bengali)]">
+                    {writer.labelBn}
+                  </span>
+                  <span className="ml-1 opacity-80">({writer.labelEn})</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Instant Top Search Results Drawer when user types or selects a writer */}
+          {catalogSearch.trim() !== '' && (
+            <div className="mt-4 pt-4 border-t border-stone-300">
+              <div className="flex items-center justify-between text-xs text-stone-600 mb-3">
+                <span>
+                  Showing <strong>{filteredBooks.length}</strong> book(s) matching &ldquo;
+                  {catalogSearch}&rdquo; — Click any book to read or play audio immediately:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCatalogSearch('')}
+                  className="text-[#9A3412] hover:underline font-medium"
+                >
+                  Show All {books.length} Books
+                </button>
+              </div>
+
+              {filteredBooks.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
+                  {filteredBooks.map((book) => (
+                    <div
+                      key={book.id}
+                      className="p-3.5 rounded-xl bg-[#FBF9F5] border border-stone-300 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-stone-900 font-[family-name:var(--font-bengali)] truncate">
+                          {book.titleBn}
+                        </p>
+                        <p className="text-xs text-stone-600 truncate">
+                          {book.authorBn} · {book.authorEn} ({book.chapters.length} Ch)
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => selectBook(book, false, true)}
+                          className="px-2.5 py-1.5 text-xs font-medium text-stone-800 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg whitespace-nowrap"
+                        >
+                          Read
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selectBook(book, true, true, 'bn')}
+                          className="px-2.5 py-1.5 text-xs font-medium text-white bg-[#9A3412] hover:bg-[#7C2D12] rounded-lg whitespace-nowrap font-[family-name:var(--font-bengali)]"
+                        >
+                          বাংলা অডিও
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#FBF9F5] border border-stone-300 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-700">
+                  <span>
+                    No local catalog match for &ldquo;{catalogSearch}&rdquo;. Search across 148,000+
+                    volumes in the connected global archives:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFederatedQuery(catalogSearch.trim());
+                      document
+                        .getElementById('federated-sources')
+                        ?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-3.5 py-2 text-xs font-medium text-white bg-[#9A3412] rounded-lg"
+                  >
+                    Search Global Archives for &ldquo;{catalogSearch}&rdquo;
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* INSTITUTIONAL HERO & OPERATIONAL ARCHIVE RIBBON */}
       <section id="top" className="px-6 lg:px-12 pt-8 pb-12 border-b border-stone-200">
@@ -2061,25 +2292,65 @@ export default function BanglaGranthaApp() {
                   </button>
                 </div>
 
-                {/* Progress Scrubber */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-500 mb-1.5">
-                    <span>
-                      Ch {activeChapter.number}/{activeBook.chapters.length} · Passage{' '}
-                      {activeParagraphIdx + 1}/{activeChapter.paragraphsBn.length}
-                    </span>
-                    <span>{totalBookPassages} Passages Total</span>
+                {/* MOVABLE CHAPTER & PASSAGE MP3 SCRUBBER SLIDERS */}
+                <div className="mt-4 pt-3 border-t border-stone-200/80 space-y-3">
+                  {/* Slider 1: Movable Chapter-to-Chapter Skip Slider */}
+                  <div>
+                    <div className="flex justify-between text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-700 mb-1">
+                      <span className="font-semibold">
+                        Skip Chapter Slider: Chapter {activeChapter.number} of{' '}
+                        {activeBook.chapters.length}
+                      </span>
+                      <span className="text-[#9A3412] font-medium">Slide to jump chapters</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, activeBook.chapters.length - 1)}
+                      step={1}
+                      value={activeChapterIdx}
+                      aria-label="Skip from one chapter to another chapter"
+                      onChange={(e) => handleSliderChapterJump(Number(e.target.value), false)}
+                      className="w-full h-2 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-[#9A3412]"
+                    />
+                    <div className="mt-1 flex justify-between text-[10px] font-[family-name:var(--font-mono)] text-stone-500">
+                      {activeBook.chapters.map((ch, idx) => (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => handleSliderChapterJump(idx, true)}
+                          className={`hover:text-[#9A3412] transition-colors ${
+                            idx === activeChapterIdx ? 'font-bold text-[#9A3412]' : ''
+                          }`}
+                        >
+                          Ch {ch.number}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="w-full h-2 bg-stone-300 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#9A3412] transition-transform duration-200 origin-left"
-                      style={{
-                        transform: `scaleX(${Math.min(
-                          1,
-                          (activeParagraphIdx + (isPlaying ? 0.6 : 0.2)) /
-                            Math.max(1, activeChapter.paragraphsBn.length)
-                        )})`,
-                      }}
+
+                  {/* Slider 2: Movable Full-Book Continuous Passage Scrubber */}
+                  <div>
+                    <div className="flex justify-between text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-500 mb-1">
+                      <span>
+                        Ch {activeChapter.number} · Passage {activeParagraphIdx + 1}/
+                        {activeChapter.paragraphsBn.length}
+                      </span>
+                      <span>
+                        Track {currentGlobalPassageIdx + 1} of {totalBookPassages}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, totalBookPassages - 1)}
+                      step={1}
+                      value={currentGlobalPassageIdx}
+                      aria-label="Scrub across all chapters and passages of the audiobook"
+                      onChange={(e) =>
+                        handleSliderGlobalPassageScrub(Number(e.target.value), false)
+                      }
+                      className="w-full h-2 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-stone-900"
                     />
                   </div>
                 </div>
@@ -2467,83 +2738,149 @@ export default function BanglaGranthaApp() {
       </footer>
 
       {/* PERSISTENT CROSS-DEVICE BOTTOM BILINGUAL FULL-BOOK AUDIOBOOK PLAYER BAR */}
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-[#1C1917] text-[#FBF9F5] border-t border-stone-800 px-4 sm:px-8 py-3 shadow-lg">
-        <div className="max-w-[1320px] mx-auto flex items-center justify-between gap-4">
-          {/* Active Book & Chapter Info */}
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              type="button"
-              onClick={togglePlayPause}
-              className="w-10 h-10 rounded-lg bg-[#9A3412] hover:bg-[#7C2D12] text-white flex items-center justify-center transition-colors shrink-0"
-              aria-label={isPlaying ? 'Pause audiobook' : 'Play audiobook'}
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-[family-name:var(--font-bengali)] font-semibold truncate">
-                  {activeBook.titleBn}
-                </p>
-                <span className="hidden sm:inline text-xs text-stone-400 truncate">
-                  · Ch {activeChapter.number}/{activeBook.chapters.length}: {activeChapter.titleEn}
-                </span>
-              </div>
-              <p className="text-[11px] text-stone-400 truncate font-[family-name:var(--font-bengali)]">
-                {engineNotice}
-              </p>
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-[#1C1917] text-[#FBF9F5] border-t border-stone-800 px-4 sm:px-8 py-2.5 shadow-lg">
+        <div className="max-w-[1320px] mx-auto space-y-2">
+          {/* Movable MP3 Chapter & Timeline Scrubber Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-1 border-b border-stone-800/90">
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-amber-400 whitespace-nowrap">
+                Ch {activeChapter.number}/{activeBook.chapters.length}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, totalBookPassages - 1)}
+                step={1}
+                value={currentGlobalPassageIdx}
+                aria-label="Movable MP3 player slider to skip chapters and passages"
+                onChange={(e) => handleSliderGlobalPassageScrub(Number(e.target.value), true)}
+                className="w-full h-2 bg-stone-700 rounded-lg appearance-none cursor-pointer accent-[#EA580C]"
+              />
+              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-400 whitespace-nowrap">
+                P {activeParagraphIdx + 1}/{activeChapter.paragraphsBn.length} (
+                {currentGlobalPassageIdx + 1}/{totalBookPassages})
+              </span>
+            </div>
+
+            {/* Direct Movable Chapter-to-Chapter Selector Pills + Slider */}
+            <div className="flex items-center gap-1 overflow-x-auto">
+              <span className="text-[10px] uppercase tracking-wider text-stone-400 whitespace-nowrap mr-1">
+                Skip Chapter:
+              </span>
+              {activeBook.chapters.map((ch, idx) => (
+                <button
+                  key={ch.id}
+                  type="button"
+                  onClick={() => handleSliderChapterJump(idx, true)}
+                  className={`px-2 py-0.5 text-[11px] font-[family-name:var(--font-mono)] rounded transition-colors whitespace-nowrap ${
+                    idx === activeChapterIdx
+                      ? 'bg-[#9A3412] text-white font-semibold'
+                      : 'bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white'
+                  }`}
+                >
+                  Ch {ch.number}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Center Transport & Timecode */}
-          <div className="hidden lg:flex items-center gap-4 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                if (activeParagraphIdx > 0) {
-                  const prev = activeParagraphIdx - 1;
-                  setActiveParagraphIdx(prev);
-                  if (isPlaying)
-                    startPlayback(prev, audioLangMode, activeChapterIdx, activeBook);
-                } else if (activeChapterIdx > 0) {
-                  const prevCh = activeChapterIdx - 1;
-                  const lastPara = activeBook.chapters[prevCh].paragraphsBn.length - 1;
-                  setActiveChapterIdx(prevCh);
-                  setActiveParagraphIdx(lastPara);
-                  if (isPlaying) startPlayback(lastPara, audioLangMode, prevCh, activeBook);
-                }
-              }}
-              className="p-1.5 text-stone-300 hover:text-white transition-colors"
-              aria-label="Previous passage or chapter"
-            >
-              <SkipBack className="w-4 h-4" />
-            </button>
+          <div className="flex items-center justify-between gap-4">
+            {/* Active Book & Chapter Info */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={togglePlayPause}
+                className="w-10 h-10 rounded-lg bg-[#9A3412] hover:bg-[#7C2D12] text-white flex items-center justify-center transition-colors shrink-0"
+                aria-label={isPlaying ? 'Pause audiobook' : 'Play audiobook'}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-[family-name:var(--font-bengali)] font-semibold truncate">
+                    {activeBook.titleBn}
+                  </p>
+                  <span className="hidden sm:inline text-xs text-stone-400 truncate">
+                    · Ch {activeChapter.number}/{activeBook.chapters.length}:{' '}
+                    {activeChapter.titleEn}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-400 truncate font-[family-name:var(--font-bengali)]">
+                  {engineNotice}
+                </p>
+              </div>
+            </div>
 
-            <span className="text-xs font-[family-name:var(--font-mono)] tabular-nums text-stone-300">
-              Ch {activeChapter.number}/{activeBook.chapters.length} · P {activeParagraphIdx + 1}/
-              {activeChapter.paragraphsBn.length}
-            </span>
+            {/* Center Transport & Chapter Skip Buttons */}
+            <div className="hidden lg:flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                disabled={activeChapterIdx === 0}
+                onClick={() => handleSliderChapterJump(activeChapterIdx - 1, true)}
+                className="px-2 py-1 text-[11px] font-medium bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded transition-colors whitespace-nowrap"
+                title="Previous Chapter"
+              >
+                « Prev Ch
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
-                  const next = activeParagraphIdx + 1;
-                  setActiveParagraphIdx(next);
-                  if (isPlaying)
-                    startPlayback(next, audioLangMode, activeChapterIdx, activeBook);
-                } else if (activeChapterIdx + 1 < activeBook.chapters.length) {
-                  const nextCh = activeChapterIdx + 1;
-                  setActiveChapterIdx(nextCh);
-                  setActiveParagraphIdx(0);
-                  if (isPlaying) startPlayback(0, audioLangMode, nextCh, activeBook);
-                }
-              }}
-              className="p-1.5 text-stone-300 hover:text-white transition-colors"
-              aria-label="Next passage or chapter"
-            >
-              <SkipForward className="w-4 h-4" />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeParagraphIdx > 0) {
+                    const prev = activeParagraphIdx - 1;
+                    setActiveParagraphIdx(prev);
+                    if (isPlaying)
+                      startPlayback(prev, audioLangMode, activeChapterIdx, activeBook);
+                  } else if (activeChapterIdx > 0) {
+                    const prevCh = activeChapterIdx - 1;
+                    const lastPara = activeBook.chapters[prevCh].paragraphsBn.length - 1;
+                    setActiveChapterIdx(prevCh);
+                    setActiveParagraphIdx(lastPara);
+                    if (isPlaying) startPlayback(lastPara, audioLangMode, prevCh, activeBook);
+                  }
+                }}
+                className="p-1.5 text-stone-300 hover:text-white transition-colors"
+                aria-label="Previous passage or chapter"
+              >
+                <SkipBack className="w-4 h-4" />
+              </button>
+
+              <span className="text-xs font-[family-name:var(--font-mono)] tabular-nums text-stone-300">
+                Ch {activeChapter.number}/{activeBook.chapters.length} · P {activeParagraphIdx + 1}/
+                {activeChapter.paragraphsBn.length}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
+                    const next = activeParagraphIdx + 1;
+                    setActiveParagraphIdx(next);
+                    if (isPlaying)
+                      startPlayback(next, audioLangMode, activeChapterIdx, activeBook);
+                  } else if (activeChapterIdx + 1 < activeBook.chapters.length) {
+                    const nextCh = activeChapterIdx + 1;
+                    setActiveChapterIdx(nextCh);
+                    setActiveParagraphIdx(0);
+                    if (isPlaying) startPlayback(0, audioLangMode, nextCh, activeBook);
+                  }
+                }}
+                className="p-1.5 text-stone-300 hover:text-white transition-colors"
+                aria-label="Next passage or chapter"
+              >
+                <SkipForward className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                disabled={activeChapterIdx + 1 >= activeBook.chapters.length}
+                onClick={() => handleSliderChapterJump(activeChapterIdx + 1, true)}
+                className="px-2 py-1 text-[11px] font-medium bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded transition-colors whitespace-nowrap"
+                title="Next Chapter"
+              >
+                Next Ch »
+              </button>
+            </div>
 
           {/* Right Audio Language Switcher (বাংলা / EN / বাংলা+EN), Speed & Mute */}
           <div className="flex items-center gap-2 shrink-0">
@@ -2609,6 +2946,7 @@ export default function BanglaGranthaApp() {
             >
               {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
+          </div>
           </div>
         </div>
       </div>

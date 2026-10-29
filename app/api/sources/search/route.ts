@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BengaliBook, BookChapter, GenreId } from '@/lib/bengali-catalog';
+import { BengaliBook, BookChapter, CURATED_BENGALI_BOOKS, GenreId } from '@/lib/bengali-catalog';
 
 interface OpenLibraryDoc {
   key?: string;
@@ -106,7 +106,16 @@ export async function GET(req: NextRequest) {
   const sourceFilter = searchParams.get('source') || 'all';
 
   try {
-    const books: BengaliBook[] = [];
+    const qLower = query.toLowerCase();
+    const curatedMatches = CURATED_BENGALI_BOOKS.filter(
+      (b) =>
+        b.titleBn.toLowerCase().includes(qLower) ||
+        b.titleEn.toLowerCase().includes(qLower) ||
+        b.authorBn.toLowerCase().includes(qLower) ||
+        b.authorEn.toLowerCase().includes(qLower) ||
+        b.synopsisEn.toLowerCase().includes(qLower)
+    );
+    const books: BengaliBook[] = [...curatedMatches];
 
     if (sourceFilter === 'all' || sourceFilter === 'openlibrary-ben' || sourceFilter === 'internet-archive-dli') {
       const olUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(

@@ -1,3 +1,5 @@
+import { BANGLADESHI_RENOWNED_WRITERS_BOOKS } from './bangladeshi-writers-catalog';
+
 export type GenreId =
   | 'all'
   | 'upanyas'
@@ -362,6 +364,7 @@ export const CURATED_BENGALI_BOOKS: BengaliBook[] = [
       },
     ],
   },
+  ...BANGLADESHI_RENOWNED_WRITERS_BOOKS,
   {
     id: 'pather-panchali',
     accessionNumber: 'BG-1929-UPN-001',
