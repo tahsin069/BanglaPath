@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import WebSocket from 'ws';
 import type { ClientRequest, IncomingMessage } from 'http';
+import { buildDirectedBanglaSSML } from '@/lib/bengali-narration-director';
 
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const WSS_URL =
@@ -94,33 +95,18 @@ function generateSecMsGec(clockOffsetMs: number): string {
 }
 
 /**
- * Builds pure, un-resampled SSML at native model pitch (+0Hz) and rate (+0%)
- * for the Generic Bengali Male Voice Pack (`bn-BD-PradeepNeural` / `bn-IN-BashkarNeural`).
+ * Builds directed SSML using the Bengali Audiobook Narration Director:
+ * - Preserves 100% of original Bengali wording and natural punctuation
+ * - Divides long paragraphs into natural breath segments
+ * - Distinguishes character dialogue from narrative prose
+ * - Uses authentic Bangladeshi Bengali (`bn-BD-PradeepNeural`) pronunciation with zero word-chopping
  */
 export function buildLiteraryStorytellingSSML(options: {
   text: string;
   voiceName: string;
   locale: string;
 }): string {
-  const { text, voiceName, locale } = options;
-
-  const cleanText = text
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/\s*(—|--)\s*/g, ', ')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-
-  return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${locale}">
-                <voice name="${voiceName}">
-                    <prosody pitch="+0Hz" rate="+0%" volume="+0%">
-                        ${cleanText}
-                    </prosody>
-                </voice>
-            </speak>`;
+  return buildDirectedBanglaSSML(options).ssml;
 }
 
 async function openAndSynthesizeStream(

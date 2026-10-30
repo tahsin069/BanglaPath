@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { BARITONE_VOICE_PRESETS, MaleNarratorPersona } from '@/lib/baritone-audio-engine';
-import { synthesizeNativeNeuralMp3 } from '@/lib/bangla-neural-tts';
+import { synthesizeWithAI4BharatIndicTTS } from '@/lib/ai4bharat-indic-tts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -164,130 +164,60 @@ export async function POST(req: NextRequest) {
     const preset = BARITONE_VOICE_PRESETS[validPersona];
 
     // =========================================================================
-    // PATH A: UNIVERSAL GENERIC BENGALI MALE VOICE PACK (lang === 'bn')
-    // 1. Standard Generic Bengali Male Neural Voice Pack (`bn-BD-PradeepNeural` & `bn-IN-BashkarNeural`)
-    // 2. Gemini 3.8 TTS Male Voice (`Charon`) over HTTPS REST
-    // 3. ElevenLabs Multilingual v2 Male Voice (if sk_ key is configured)
+    // PRIMARY NARRATOR: AI4Bharat Indic-TTS (`https://github.com/AI4Bharat/Indic-TTS`)
+    // Runs AI4Bharat Indic-TTS TextNormalizer + ParagraphHandler + Male Voice Artist
     // =========================================================================
-    if (targetLang === 'bn') {
-      const bnCandidates: Array<{ voiceName: string; locale: string; label: string }> = [
-        {
-          voiceName: 'bn-BD-PradeepNeural',
-          locale: 'bn-BD',
-          label: 'বাংলা পুরুষ কণ্ঠ · Generic Bangla Male Voice (Pradeep)',
-        },
-        {
-          voiceName: 'bn-IN-BashkarNeural',
-          locale: 'bn-IN',
-          label: 'বাংলা পুরুষ কণ্ঠ · Generic Bangla Male Voice (Bashkar)',
-        },
-      ];
+    const indicTtsResult = await synthesizeWithAI4BharatIndicTTS({
+      text,
+      lang: targetLang,
+    });
 
-      for (const candidate of bnCandidates) {
-        try {
-          const mp3Buffer = await synthesizeNativeNeuralMp3({
-            text: text.slice(0, 3800),
-            voiceName: candidate.voiceName,
-            locale: candidate.locale,
-            rate: preset.neuralRate,
-            pitch: preset.neuralPitch,
-            isPoetic: preset.isPoetic,
-          });
-
-          return NextResponse.json({
-            audioBase64: mp3Buffer.toString('base64'),
-            mimeType: 'audio/mpeg',
-            lang: 'bn',
-            voiceName: candidate.label,
-            engine: 'generic-bangla-male-neural-96k',
-          });
-        } catch {
-          // Try next Bengali male voice candidate
-        }
-      }
-
-      const geminiBnWavBase64 = await synthesizeGeminiMaleVoice(text, 'bn', preset.geminiVoice);
-      if (geminiBnWavBase64) {
-        return NextResponse.json({
-          audioBase64: geminiBnWavBase64,
-          mimeType: 'audio/wav',
-          lang: 'bn',
-          voiceName: 'বাংলা পুরুষ কণ্ঠ · Universal Bangla Male Voice',
-          engine: 'gemini-3.8-flash-lite-tts-male',
-        });
-      }
-
-      const elevenLabsBnBase64 = await synthesizeElevenLabsMaleVoice(
-        text,
-        preset.elevenLabsVoiceId
-      );
-      if (elevenLabsBnBase64) {
-        return NextResponse.json({
-          audioBase64: elevenLabsBnBase64,
-          mimeType: 'audio/mpeg',
-          lang: 'bn',
-          voiceName: 'বাংলা পুরুষ কণ্ঠ · Studio Bangla Male Voice',
-          engine: 'elevenlabs-multilingual-v2-male',
-        });
-      }
+    if (indicTtsResult) {
+      return NextResponse.json({
+        audioBase64: indicTtsResult.audioBase64,
+        mimeType: indicTtsResult.mimeType,
+        lang: indicTtsResult.lang,
+        voiceName: indicTtsResult.voiceName,
+        engine: indicTtsResult.engine,
+        segments: indicTtsResult.directedSegments,
+      });
     }
 
     // =========================================================================
-    // PATH B: UNIVERSAL GENERIC ENGLISH MALE VOICE PACK (lang === 'en')
+    // SECONDARY FALLBACK: Gemini 3.8 Male TTS (`Charon`) over HTTPS REST
     // =========================================================================
-    if (targetLang === 'en') {
-      const enCandidates: Array<{ voiceName: string; locale: string }> = [
-        { voiceName: 'en-US-BrianMultilingualNeural', locale: 'en-US' },
-        { voiceName: 'en-GB-RyanNeural', locale: 'en-GB' },
-      ];
+    const geminiWavBase64 = await synthesizeGeminiMaleVoice(text, targetLang, preset.geminiVoice);
+    if (geminiWavBase64) {
+      return NextResponse.json({
+        audioBase64: geminiWavBase64,
+        mimeType: 'audio/wav',
+        lang: targetLang,
+        voiceName:
+          targetLang === 'bn'
+            ? 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Male Voice Artist)'
+            : 'AI4Bharat Indic-TTS · Male Storyteller (EN)',
+        engine: 'gemini-3.8-flash-lite-tts-male',
+      });
+    }
 
-      for (const candidate of enCandidates) {
-        try {
-          const mp3Buffer = await synthesizeNativeNeuralMp3({
-            text: text.slice(0, 3800),
-            voiceName: candidate.voiceName,
-            locale: candidate.locale,
-            rate: preset.neuralRate,
-            pitch: preset.neuralPitch,
-            isPoetic: preset.isPoetic,
-          });
-
-          return NextResponse.json({
-            audioBase64: mp3Buffer.toString('base64'),
-            mimeType: 'audio/mpeg',
-            lang: 'en',
-            voiceName: 'Universal Male Storyteller (EN)',
-            engine: 'generic-english-male-neural-96k',
-          });
-        } catch {
-          // Try next English male candidate
-        }
-      }
-
-      const geminiEnWavBase64 = await synthesizeGeminiMaleVoice(text, 'en', preset.geminiVoice);
-      if (geminiEnWavBase64) {
-        return NextResponse.json({
-          audioBase64: geminiEnWavBase64,
-          mimeType: 'audio/wav',
-          lang: 'en',
-          voiceName: 'Universal Male Storyteller (EN)',
-          engine: 'gemini-3.8-flash-lite-tts-male',
-        });
-      }
-
-      const elevenLabsEnBase64 = await synthesizeElevenLabsMaleVoice(
-        text,
-        preset.elevenLabsVoiceId
-      );
-      if (elevenLabsEnBase64) {
-        return NextResponse.json({
-          audioBase64: elevenLabsEnBase64,
-          mimeType: 'audio/mpeg',
-          lang: 'en',
-          voiceName: preset.labelEn,
-          engine: 'elevenlabs-multilingual-v2-male',
-        });
-      }
+    // =========================================================================
+    // TERTIARY FALLBACK: ElevenLabs Multilingual v2 Male Voice (if sk_ key configured)
+    // =========================================================================
+    const elevenLabsBase64 = await synthesizeElevenLabsMaleVoice(
+      text,
+      preset.elevenLabsVoiceId
+    );
+    if (elevenLabsBase64) {
+      return NextResponse.json({
+        audioBase64: elevenLabsBase64,
+        mimeType: 'audio/mpeg',
+        lang: targetLang,
+        voiceName:
+          targetLang === 'bn'
+            ? 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Studio Male)'
+            : preset.labelEn,
+        engine: 'elevenlabs-multilingual-v2-male',
+      });
     }
 
     return NextResponse.json(

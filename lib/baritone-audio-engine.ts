@@ -33,8 +33,8 @@ export interface BaritoneVoicePreset {
 
 const GENERIC_BANGLA_MALE_PRESET: BaritoneVoicePreset = {
   id: 'deep-baritone',
-  labelEn: 'Generic Bangla Male Voice',
-  labelBn: 'বাংলা পুরুষ কণ্ঠ (Generic Bangla Male Voice)',
+  labelEn: 'AI4Bharat Indic-TTS · Bengali Male Artist',
+  labelBn: 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী',
   neuralVoiceBn: 'bn-BD-PradeepNeural',
   localeBn: 'bn-BD',
   neuralVoiceEn: 'en-US-BrianMultilingualNeural',
@@ -45,7 +45,7 @@ const GENERIC_BANGLA_MALE_PRESET: BaritoneVoicePreset = {
   elevenLabsVoiceId: 'nPczCjzI2devNBz1zQrb',
   geminiVoice: 'Charon',
   descriptionEn:
-    'Universal generic Bengali male audiobook narrator compatible across all web platforms.',
+    'Natural Bengali male voice artist powered by AI4Bharat Indic-TTS normalization & synthesis.',
   browserPitch: 0.6,
   baseTempoMultiplier: 0.94,
 };

@@ -37,6 +37,10 @@ import {
   getBrowserVoicesAsync,
   selectUniversalMaleSpeechVoice,
 } from '@/lib/baritone-audio-engine';
+import {
+  directBengaliLiteraryPassage,
+  DirectedNarrationSegment,
+} from '@/lib/bengali-narration-director';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
@@ -997,6 +1001,45 @@ export default function BanglaGranthaApp() {
     if (isPlaying || playImmediately) {
       startPlayback(resolvedParaIdx, audioLangMode, resolvedChIdx, activeBook);
     }
+  };
+
+  // Bengali Audiobook Narration Director State
+  const [showDirectorCueSheet, setShowDirectorCueSheet] = useState(true);
+  const [customDirectorInput, setCustomDirectorInput] = useState('');
+  const [customDirectedSegments, setCustomDirectedSegments] = useState<
+    DirectedNarrationSegment[] | null
+  >(null);
+
+  const activeBnPassageText =
+    activeChapter.paragraphsBn[activeParagraphIdx] || activeChapter.paragraphsBn[0] || '';
+  const activeDirectedSegments: DirectedNarrationSegment[] =
+    customDirectedSegments ?? directBengaliLiteraryPassage(activeBnPassageText, 'bn');
+
+  const handlePrepareCustomDirection = () => {
+    if (!customDirectorInput.trim()) {
+      setCustomDirectedSegments(null);
+      return;
+    }
+    const prepared = directBengaliLiteraryPassage(customDirectorInput.trim(), 'bn');
+    setCustomDirectedSegments(prepared);
+  };
+
+  const handleSpeakDirectedSegment = (seg: DirectedNarrationSegment) => {
+    stopAllAudio();
+    const sessionId = playbackSessionRef.current;
+    setIsPlaying(true);
+    playSingleLanguageSegment(
+      seg.text,
+      'bn',
+      activeChapter.number,
+      activeParagraphIdx,
+      activeBook,
+      seg.emotionLabelEn,
+      sessionId,
+      () => {
+        setIsPlaying(false);
+      }
+    );
   };
 
   const featuredWritersQuickList = [
@@ -2258,10 +2301,10 @@ export default function BanglaGranthaApp() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[11px] uppercase tracking-wider text-stone-600 font-semibold">
-                        Storyteller Voice (গল্প পাঠে)
+                        Storyteller Voice · AI4Bharat/Indic-TTS
                       </p>
                       <p className="text-xs font-semibold text-stone-900 font-[family-name:var(--font-bengali)] mt-0.5">
-                        অগ্নি · শ্রুতি-গল্প কথক (Agni · Friday Classics Style)
+                        বাংলা পুরুষ কণ্ঠশিল্পী (AI4Bharat Indic-TTS · Bengali Male Artist)
                       </p>
                     </div>
                     {activeBook.id !== 'apadartho-satyajit-ray' && (
@@ -2526,6 +2569,107 @@ export default function BanglaGranthaApp() {
                   <p className="text-[11px] text-stone-600 pt-1 font-[family-name:var(--font-bengali)]">
                     {engineNotice}
                   </p>
+                </div>
+
+                {/* BENGALI AUDIOBOOK NARRATION DIRECTOR SCRIPT (পাঠ নির্দেশনা ও পর্ব বিভাজন) */}
+                <div className="mt-5 pt-4 border-t border-stone-200">
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div>
+                      <p className="text-xs font-semibold text-stone-900">
+                        Bengali Narration Director (পাঠ নির্দেশনা স্ক্রিপ্ট)
+                      </p>
+                      <p className="text-[11px] text-stone-500">
+                        Verbatim breath segments · Dialogue &amp; emotion cues · Authentic bn-BD
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDirectorCueSheet((prev) => !prev)}
+                      className="px-2.5 py-1 text-[11px] font-medium text-[#9A3412] bg-[#FBF9F5] border border-[#9A3412]/40 rounded-md hover:bg-[#9A3412] hover:text-white transition-colors shrink-0"
+                    >
+                      {showDirectorCueSheet ? 'Hide Cue Sheet' : 'Show Cue Sheet'}
+                    </button>
+                  </div>
+
+                  {showDirectorCueSheet && (
+                    <div className="space-y-2.5">
+                      {/* Structured Narration Segments List */}
+                      <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                        {activeDirectedSegments.map((seg) => (
+                          <div
+                            key={seg.id}
+                            className="p-2.5 rounded-lg bg-[#FBF9F5] border border-stone-200/90 hover:border-[#9A3412]/60 transition-colors"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] text-stone-600 mb-1">
+                              <span className="font-[family-name:var(--font-mono)] font-semibold text-[#9A3412]">
+                                SEG 0{seg.index} · {seg.typeLabelBn}
+                              </span>
+                              <span className="font-[family-name:var(--font-bengali)] text-stone-700 font-medium">
+                                ভাব: {seg.emotionLabelBn} ({seg.emotionLabelEn})
+                              </span>
+                            </div>
+
+                            <p className="text-xs font-[family-name:var(--font-bengali)] text-stone-900 leading-relaxed">
+                              {seg.text}
+                            </p>
+
+                            <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-stone-500">
+                              <span className="font-[family-name:var(--font-bengali)]">
+                                {seg.pauseCueBn}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSpeakDirectedSegment(seg)}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-[#9A3412] bg-[#F3EFE6] hover:bg-[#9A3412] hover:text-white rounded transition-colors"
+                              >
+                                <Play className="w-2.5 h-2.5" />
+                                <span>Speak Segment</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Custom Literary Text Narration Director Input */}
+                      <div className="pt-2 border-t border-stone-200/80">
+                        <label
+                          htmlFor="custom-director-textarea"
+                          className="block text-[11px] font-medium text-stone-700 mb-1"
+                        >
+                          Prepare Supplied Bengali Literary Text for Narration:
+                        </label>
+                        <textarea
+                          id="custom-director-textarea"
+                          rows={2}
+                          value={customDirectorInput}
+                          onChange={(e) => setCustomDirectorInput(e.target.value)}
+                          placeholder="যেকোনো বাংলা সাহিত্য অনুচ্ছেদ এখানে পেস্ট করুন — মূল শব্দ ও যতিচিহ্ন অক্ষুণ্ণ রেখে স্বাভাবিক পাঠ-খণ্ডে বিভক্ত হবে..."
+                          className="w-full px-2.5 py-1.5 text-xs font-[family-name:var(--font-bengali)] bg-[#FBF9F5] border border-stone-300 rounded-lg text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#9A3412]"
+                        />
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handlePrepareCustomDirection}
+                            className="px-2.5 py-1 text-[11px] font-medium text-white bg-stone-900 hover:bg-[#9A3412] rounded-md transition-colors"
+                          >
+                            Direct Segments
+                          </button>
+                          {customDirectedSegments && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCustomDirectorInput('');
+                                setCustomDirectedSegments(null);
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-medium text-stone-600 hover:text-stone-900 bg-[#FBF9F5] border border-stone-300 rounded-md transition-colors"
+                            >
+                              Reset to Book Passage
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </aside>
