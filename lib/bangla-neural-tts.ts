@@ -290,7 +290,7 @@ export async function synthesizeNativeNeuralMp3(options: {
   volume?: string;
   isPoetic?: boolean;
 }): Promise<Buffer> {
-  const { text, voiceName, locale, rate = '-5%', pitch = '-4Hz', volume = '+5%' } = options;
+  const { text, voiceName, locale, rate = '-16%', pitch = '-5Hz', volume = '+6%' } = options;
   const trimmed = text.replace(/\s+/g, ' ').trim();
 
   if (trimmed.length <= 1200) {

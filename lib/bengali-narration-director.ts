@@ -13,6 +13,8 @@
  * 8. Avoid unnecessary pauses between words (continuous breath-group phrasing).
  */
 
+import { applyRJKebriaBanglaPhoneticTraining } from '@/lib/rj-kebria-voice-model';
+
 export type NarrationSegmentType = 'narration' | 'dialogue' | 'introspection';
 
 export type NarrationEmotionTone =
@@ -37,7 +39,7 @@ export interface DirectedNarrationSegment {
   emotionLabelEn: string;
   /** Natural pause after this segment in milliseconds (no word-level chopping) */
   pauseAfterMs: number;
-  /** Human-readable directorial cue (e.g. "[স্বাভাবিক শ্বাস বিরতি · ৩৫০ মি.সে.]") */
+  /** Human-readable directorial cue (e.g. "[স্বাভাবিক শ্বাস বিরতি · ৫২০ মি.সে.]") */
   pauseCueBn: string;
   /** Subtle SSML prosody rate adjustment for natural human delivery */
   prosodyRate: string;
@@ -155,7 +157,7 @@ function detectSegmentType(segmentText: string): {
 }
 
 /**
- * Detects the emotional inflection and prosodic contour of a Bengali literary segment.
+ * Detects the emotional inflection and RJ Kebria contemplative prosodic contour of a Bengali literary segment.
  */
 function detectEmotionAndProsody(
   segmentText: string,
@@ -177,10 +179,10 @@ function detectEmotionAndProsody(
       emotion: 'inquisitive',
       emotionLabelBn: 'জিজ্ঞাসা ও কৌতূহল',
       emotionLabelEn: 'Inquisitive',
-      prosodyRate: segmentType === 'dialogue' ? '-1%' : '-2%',
-      prosodyPitch: '+1Hz',
-      pauseAfterMs: 420,
-      pauseCueBn: '[প্রশ্নসূচক বিরতি · ৪২০ মি.সে.]',
+      prosodyRate: segmentType === 'dialogue' ? '-14%' : '-16%',
+      prosodyPitch: '-4Hz',
+      pauseAfterMs: 560,
+      pauseCueBn: '[প্রশ্নসূচক বিরতি · ৫৬০ মি.সে.]',
     };
   }
 
@@ -191,10 +193,10 @@ function detectEmotionAndProsody(
       emotion: isTense ? 'tense-suspense' : 'dramatic-emphasis',
       emotionLabelBn: isTense ? 'উৎকণ্ঠা ও নাটকীয়তা' : 'আবেগঘন বিস্ময়',
       emotionLabelEn: isTense ? 'Tense & Dramatic' : 'Expressive Emphasis',
-      prosodyRate: '+0%',
-      prosodyPitch: '+1Hz',
-      pauseAfterMs: 440,
-      pauseCueBn: '[আবেগঘন বিরতি · ৪৪০ মি.সে.]',
+      prosodyRate: '-14%',
+      prosodyPitch: '-4Hz',
+      pauseAfterMs: 580,
+      pauseCueBn: '[আবেগঘন বিরতি · ৫৮০ মি.সে.]',
     };
   }
 
@@ -204,10 +206,10 @@ function detectEmotionAndProsody(
       emotion: 'tense-suspense',
       emotionLabelBn: 'চাপা উত্তেজনা',
       emotionLabelEn: 'Measured Suspense',
-      prosodyRate: '-2%',
-      prosodyPitch: '+0Hz',
-      pauseAfterMs: 380,
-      pauseCueBn: '[নাটকীয় বিরতি · ৩৮০ মি.সে.]',
+      prosodyRate: '-16%',
+      prosodyPitch: '-5Hz',
+      pauseAfterMs: 540,
+      pauseCueBn: '[নাটকীয় বিরতি · ৫৪০ মি.সে.]',
     };
   }
 
@@ -221,10 +223,10 @@ function detectEmotionAndProsody(
       emotion: 'somber-reflective',
       emotionLabelBn: 'ধীর ও গভীর অনুভব',
       emotionLabelEn: 'Somber & Reflective',
-      prosodyRate: '-4%',
-      prosodyPitch: '-1Hz',
-      pauseAfterMs: 450,
-      pauseCueBn: '[গভীর অনুভব বিরতি · ৪৫০ মি.সে.]',
+      prosodyRate: '-20%',
+      prosodyPitch: '-6Hz',
+      pauseAfterMs: 650,
+      pauseCueBn: '[গভীর অনুভব বিরতি · ৬৫০ মি.সে.]',
     };
   }
 
@@ -234,10 +236,10 @@ function detectEmotionAndProsody(
       emotion: 'warm-dialogue',
       emotionLabelBn: 'স্বাভাবিক সংলাপ',
       emotionLabelEn: 'Character Dialogue',
-      prosodyRate: '+0%',
-      prosodyPitch: '+1Hz',
-      pauseAfterMs: 360,
-      pauseCueBn: '[সংলাপ পরিবর্তন বিরতি · ৩৬০ মি.সে.]',
+      prosodyRate: '-14%',
+      prosodyPitch: '-4Hz',
+      pauseAfterMs: 480,
+      pauseCueBn: '[সংলাপ পরিবর্তন বিরতি · ৪৮০ মি.সে.]',
     };
   }
 
@@ -247,22 +249,22 @@ function detectEmotionAndProsody(
       emotion: 'warm-dialogue',
       emotionLabelBn: 'উষ্ণ ও প্রাঞ্জল পাঠ',
       emotionLabelEn: 'Warm Literary Flow',
-      prosodyRate: '-2%',
-      prosodyPitch: '+0Hz',
-      pauseAfterMs: 320,
-      pauseCueBn: '[স্বাভাবিক শ্বাস বিরতি · ৩২০ মি.সে.]',
+      prosodyRate: '-16%',
+      prosodyPitch: '-5Hz',
+      pauseAfterMs: 500,
+      pauseCueBn: '[স্বাভাবিক শ্বাস বিরতি · ৫০০ মি.সে.]',
     };
   }
 
-  // 7. Default Calm Bangladeshi Literary Narration
+  // 7. Default Calm RJ Kebria Bangladeshi Literary Narration
   return {
     emotion: 'calm-narrative',
-    emotionLabelBn: 'শান্ত ও স্বাভাবিক বর্ণনা',
+    emotionLabelBn: 'শান্ত ও ধীরস্থির বর্ণনা',
     emotionLabelEn: 'Calm Literary Narration',
-    prosodyRate: '-2%',
-    prosodyPitch: '+0Hz',
-    pauseAfterMs: 320,
-    pauseCueBn: '[স্বাভাবিক শ্বাস বিরতি · ৩২০ মি.সে.]',
+    prosodyRate: '-16%',
+    prosodyPitch: '-5Hz',
+    pauseAfterMs: 520,
+    pauseCueBn: '[স্বাভাবিক শ্বাস বিরতি · ৫২০ মি.সে.]',
   };
 }
 
@@ -390,21 +392,28 @@ export function buildDirectedBanglaSSML(options: {
     text,
     voiceName,
     locale,
-    pitch = '-4Hz',
-    rate = '-5%',
-    volume = '+5%',
+    pitch = '-5Hz',
+    rate = '-16%',
+    volume = '+6%',
   } = options;
   const lang: 'bn' | 'en' = locale.toLowerCase().startsWith('bn') ? 'bn' : 'en';
   const segments = directBengaliLiteraryPassage(text, lang);
 
   // Join the directed breath segments with clean single spaces so natural Bengali punctuation
   // (।, ?, !, —, commas, and quotation marks) drives authentic Bangladeshi pauses with zero word-chopping
-  const directedFlowText =
+  const rawDirectedFlowText =
     segments.length > 0
       ? segments.map((s) => s.text).join(' ')
       : preserveAuthenticBangladeshiText(text);
 
-  const xmlSafeText = escapeXmlText(directedFlowText);
+  // Apply RJ Kebria's Bangla phonetic training ("স" -> "Sh" / শ, silent ba-phala স্ব -> শ, Dhaka vowel harmony)
+  // strictly to the spoken SSML stream while keeping `segments` visual text 100% untouched.
+  const phoneticFlowText =
+    lang === 'bn'
+      ? applyRJKebriaBanglaPhoneticTraining(rawDirectedFlowText)
+      : rawDirectedFlowText;
+
+  const xmlSafeText = escapeXmlText(phoneticFlowText);
 
   const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${locale}">
                 <voice name="${voiceName}">
@@ -428,8 +437,10 @@ export function formatSegmentsForIndicTTSBatchCSV(
   return segments
     .map((seg) => {
       const safeId = `seg_${String(seg.index).padStart(2, '0')}`;
-      const cleanText = seg.text.replace(/\|/g, '।').replace(/\r?\n/g, ' ').trim();
-      return `${safeId}|${cleanText}|male|male`;
+      const rawClean = seg.text.replace(/\|/g, '।').replace(/\r?\n/g, ' ').trim();
+      const phoneticText =
+        seg.locale === 'bn-BD' ? applyRJKebriaBanglaPhoneticTraining(rawClean) : rawClean;
+      return `${safeId}|${phoneticText}|male|male`;
     })
     .join('\n');
 }

@@ -51,7 +51,10 @@ import {
 } from '@/lib/bengali-narration-director';
 import { SpotifySoundwaveVisualizer } from '@/components/SpotifySoundwaveVisualizer';
 import { SpotifyPopupAudioPlayer } from '@/components/SpotifyPopupAudioPlayer';
-import { RJ_KEBRIA_REFERENCE_AUDIO_PATH } from '@/lib/rj-kebria-voice-model';
+import {
+  applyRJKebriaBanglaPhoneticTraining,
+  RJ_KEBRIA_REFERENCE_AUDIO_PATH,
+} from '@/lib/rj-kebria-voice-model';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
@@ -99,7 +102,7 @@ export default function BanglaGranthaApp() {
   const [ambientTanpura, setAmbientTanpura] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [engineNotice, setEngineNotice] = useState<string>(
-    'কণ্ঠ মডেল: আরজে কিবরিয়া · জীবন গল্প (RJ Kebria Replicated Voice Model · 108Hz Studio Baritone)'
+    'কণ্ঠ মডেল: আরজে কিবরিয়া · জীবন গল্প (RJ Kebria Voice Model · স = শ "Sh" Diction · Calm Pacing)'
   );
 
   // Federated E-Book Source Search State
@@ -641,7 +644,9 @@ export default function BanglaGranthaApp() {
           if (sessionId !== playbackSessionRef.current) return;
 
           const selected = selectUniversalMaleSpeechVoice(voices, lang);
-          const utterance = new SpeechSynthesisUtterance(text);
+          const spokenText =
+            lang === 'bn' ? applyRJKebriaBanglaPhoneticTraining(text) : text;
+          const utterance = new SpeechSynthesisUtterance(spokenText);
           utterance.pitch = selected.pitch;
           utterance.rate = playbackSpeed * selected.rateMultiplier;
           utterance.lang = selected.langTag;
@@ -2427,7 +2432,7 @@ export default function BanglaGranthaApp() {
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        Replicated Voice Model · 108Hz Baritone
+                        RJ Kebria Voice Model · স = শ (Sh) Calibrated
                       </p>
                       <p className="text-xs font-semibold text-white font-[family-name:var(--font-bengali)] mt-0.5">
                         {BARITONE_VOICE_PRESETS[narratorPersona]?.labelBn}
@@ -2711,7 +2716,7 @@ export default function BanglaGranthaApp() {
                   <div className="flex items-center justify-between">
                     <span className="text-stone-300">Narration Speed</span>
                     <div className="flex items-center gap-1 font-[family-name:var(--font-mono)] tabular-nums">
-                      {[0.85, 1.0, 1.25, 1.5].map((spd) => (
+                      {[0.75, 0.85, 0.92, 1.0, 1.15].map((spd) => (
                         <button
                           key={spd}
                           type="button"

@@ -2,7 +2,11 @@ import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { BARITONE_VOICE_PRESETS, MaleNarratorPersona } from '@/lib/baritone-audio-engine';
 import { synthesizeWithAI4BharatIndicTTS } from '@/lib/ai4bharat-indic-tts';
-import { RJ_KEBRIA_VOICE_MODELS, RJKebriaVoiceStyle } from '@/lib/rj-kebria-voice-model';
+import {
+  applyRJKebriaBanglaPhoneticTraining,
+  RJ_KEBRIA_VOICE_MODELS,
+  RJKebriaVoiceStyle,
+} from '@/lib/rj-kebria-voice-model';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,9 +80,9 @@ async function synthesizeElevenLabsMaleVoice(
           text: text.slice(0, 4500),
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.65,
-            similarity_boost: 0.85,
-            style: 0.25,
+            stability: 0.72,
+            similarity_boost: 0.88,
+            style: 0.2,
             use_speaker_boost: true,
           },
         }),
@@ -108,6 +112,8 @@ async function synthesizeGeminiMaleVoice(
       RJ_KEBRIA_VOICE_MODELS[kebriaStyle] || RJ_KEBRIA_VOICE_MODELS['rj-kebria-jibon-golpo'];
     const stylePrompt =
       lang === 'bn' ? kebriaModel.geminiStylePromptBn : kebriaModel.geminiStylePromptEn;
+    const phoneticText =
+      lang === 'bn' ? applyRJKebriaBanglaPhoneticTraining(text) : text;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash-lite-tts',
@@ -116,7 +122,7 @@ async function synthesizeGeminiMaleVoice(
           role: 'user',
           parts: [
             {
-              text: text.slice(0, 4000),
+              text: phoneticText.slice(0, 4000),
               // @ts-ignore - speechMetadata supported by Gemini 3.8 TTS
               speechMetadata: {
                 style: stylePrompt,
@@ -170,7 +176,7 @@ export async function POST(req: NextRequest) {
 
     // =========================================================================
     // PRIMARY NARRATOR: RJ Kebria Replicated Voice Model + AI4Bharat Indic-TTS
-    // Runs TextNormalizer + ParagraphHandler + RJ Kebria Baritone Prosody Contour
+    // Runs TextNormalizer + ParagraphHandler + RJ Kebria "স -> Sh" Phonetic Trainer
     // =========================================================================
     const indicTtsResult = await synthesizeWithAI4BharatIndicTTS({
       text,
@@ -211,8 +217,10 @@ export async function POST(req: NextRequest) {
     // =========================================================================
     // TERTIARY FALLBACK: ElevenLabs Multilingual v2 Male Voice (if sk_ key configured)
     // =========================================================================
+    const phoneticForElevenLabs =
+      targetLang === 'bn' ? applyRJKebriaBanglaPhoneticTraining(text) : text;
     const elevenLabsBase64 = await synthesizeElevenLabsMaleVoice(
-      text,
+      phoneticForElevenLabs,
       preset.elevenLabsVoiceId
     );
     if (elevenLabsBase64) {

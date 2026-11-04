@@ -46,15 +46,15 @@ const GENERIC_BANGLA_MALE_PRESET: BaritoneVoicePreset = {
   localeBn: 'bn-BD',
   neuralVoiceEn: 'en-US-BrianMultilingualNeural',
   localeEn: 'en-US',
-  neuralRate: '-5%',
-  neuralPitch: '-4Hz',
+  neuralRate: '-16%',
+  neuralPitch: '-5Hz',
   isPoetic: false,
   elevenLabsVoiceId: 'nPczCjzI2devNBz1zQrb',
   geminiVoice: 'Charon',
   descriptionEn:
-    'Replicated RJ Kebria warm Bangladeshi baritone voice model (108 Hz fundamental, Dhaka FM studio condenser intimacy).',
-  browserPitch: 0.62,
-  baseTempoMultiplier: 0.93,
+    'Replicated RJ Kebria warm Bangladeshi baritone voice model (105 Hz fundamental, unhurried contemplative pacing, authentic Bangla "স = Sh" diction).',
+  browserPitch: 0.58,
+  baseTempoMultiplier: 0.82,
 };
 
 export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePreset> = {
@@ -65,10 +65,10 @@ export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePr
     kebriaStyle: 'rj-kebria-literary',
     labelEn: 'RJ Kebria · Classic Literary Narrator',
     labelBn: 'আরজে কিবরিয়া · ধ্রুপদী সাহিত্য পাঠ (Classic Audiobook)',
-    neuralRate: '-3%',
-    neuralPitch: '-3Hz',
-    browserPitch: 0.65,
-    baseTempoMultiplier: 0.95,
+    neuralRate: '-13%',
+    neuralPitch: '-4Hz',
+    browserPitch: 0.6,
+    baseTempoMultiplier: 0.85,
   },
   'resonant-bass': {
     ...GENERIC_BANGLA_MALE_PRESET,
@@ -76,11 +76,11 @@ export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePr
     kebriaStyle: 'rj-kebria-late-night',
     labelEn: 'RJ Kebria · Late-Night FM Deep Baritone',
     labelBn: 'আরজে কিবরিয়া · রাতের রেডিও (Late-Night Deep Baritone)',
-    neuralRate: '-8%',
-    neuralPitch: '-6Hz',
+    neuralRate: '-20%',
+    neuralPitch: '-7Hz',
     isPoetic: true,
-    browserPitch: 0.56,
-    baseTempoMultiplier: 0.9,
+    browserPitch: 0.54,
+    baseTempoMultiplier: 0.78,
   },
 };
 
@@ -169,7 +169,7 @@ export async function getBrowserVoicesAsync(): Promise<SpeechSynthesisVoice[]> {
 /**
  * Selects the best cross-platform Male voice in the browser and returns the optimal pitch/rate
  * so that even if a platform only has Chrome's generic "Google বাংলা" voice, it is pitch-calibrated
- * into a natural male register (`0.58`) and never sounds like a female voice.
+ * into a natural male register (`0.58`) and paced down (`0.82`) like RJ Kebria.
  */
 export function selectUniversalMaleSpeechVoice(
   voices: SpeechSynthesisVoice[],
@@ -207,19 +207,19 @@ export function selectUniversalMaleSpeechVoice(
       return {
         voice: confirmedMaleBn,
         langTag: confirmedMaleBn.lang || 'bn-BD',
-        pitch: 0.96,
-        rateMultiplier: 0.96,
+        pitch: 0.9,
+        rateMultiplier: 0.84,
       };
     }
 
     // 2. Non-female generic Bangla voice (e.g. "Google বাংলা" on Chrome/Android, which is female at pitch 1.0)
-    // Lower pitch to 0.58 so it speaks in a deep male baritone register instead of a female voice.
+    // Lower pitch to 0.58 and pace down to 0.82 so it speaks in RJ Kebria's slow, deep baritone register.
     const genericBn = bnVoices.find((v) => !isKnownFemale(v)) || bnVoices[0] || null;
     return {
       voice: genericBn,
       langTag: genericBn?.lang || 'bn-BD',
       pitch: 0.58,
-      rateMultiplier: 0.92,
+      rateMultiplier: 0.82,
     };
   }
 
@@ -229,8 +229,8 @@ export function selectUniversalMaleSpeechVoice(
     return {
       voice: confirmedMaleEn,
       langTag: confirmedMaleEn.lang || 'en-US',
-      pitch: 0.95,
-      rateMultiplier: 0.96,
+      pitch: 0.9,
+      rateMultiplier: 0.86,
     };
   }
 
@@ -238,8 +238,8 @@ export function selectUniversalMaleSpeechVoice(
   return {
     voice: genericEn,
     langTag: genericEn?.lang || 'en-US',
-    pitch: 0.62,
-    rateMultiplier: 0.94,
+    pitch: 0.6,
+    rateMultiplier: 0.85,
   };
 }
 

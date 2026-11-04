@@ -15,7 +15,11 @@ import {
   DirectedNarrationSegment,
   preserveAuthenticBangladeshiText,
 } from '@/lib/bengali-narration-director';
-import { RJ_KEBRIA_VOICE_MODELS, RJKebriaVoiceStyle } from '@/lib/rj-kebria-voice-model';
+import {
+  applyRJKebriaBanglaPhoneticTraining,
+  RJ_KEBRIA_VOICE_MODELS,
+  RJKebriaVoiceStyle,
+} from '@/lib/rj-kebria-voice-model';
 
 /**
  * Ported from `AI4Bharat/Indic-TTS/inference/server.py`
@@ -358,6 +362,9 @@ export class IndicTTSTextNormalizer {
     text = this.convertSymbolsToWords(text, lang);
     text = this.convertNumbersToWords(text, lang);
     text = this.replacePunctuations(text, lang);
+    if (lang === 'bn') {
+      text = applyRJKebriaBanglaPhoneticTraining(text);
+    }
     return text;
   }
 }
@@ -438,6 +445,9 @@ async function callAI4BharatHostedGradioMaleTTS(
       ? 'Bikram speaks slowly in a low-pitched, calm male voice, with a warm storytelling tone, perfect for Bengali audiobook narration. The recording is very high quality with no background noise.'
       : 'Rohit speaks slowly in a low-pitched, calm male voice, with a warm storytelling tone, perfect for audiobook narration. The recording is very high quality with no background noise.';
 
+  const phoneticText =
+    lang === 'bn' ? applyRJKebriaBanglaPhoneticTraining(normalizedText) : normalizedText;
+
   try {
     const callRes = await fetch(
       'https://ai4bharat-indic-parler-tts.hf.space/gradio_api/call/generate_finetuned',
@@ -445,7 +455,7 @@ async function callAI4BharatHostedGradioMaleTTS(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          data: [normalizedText, speakerCaption],
+          data: [phoneticText, speakerCaption],
         }),
         signal: AbortSignal.timeout(3500),
       }

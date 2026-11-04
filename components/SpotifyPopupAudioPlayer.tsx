@@ -309,7 +309,7 @@ export function SpotifyPopupAudioPlayer({
             <div className="space-y-2.5 pt-2 border-t border-white/10">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1 font-[family-name:var(--font-mono)]">
-                  {[0.85, 1.0, 1.25, 1.5].map((spd) => (
+                  {[0.75, 0.85, 0.92, 1.0, 1.15].map((spd) => (
                     <button
                       key={spd}
                       type="button"
