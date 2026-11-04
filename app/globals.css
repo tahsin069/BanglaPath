@@ -1,1 +1,91 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+Bengali:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+  --font-bengali: 'Noto Serif Bengali', 'SolaimanLipi', 'Kalpurush', 'SutonnyMJ', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ============================================================
+   CUSTOM AESTHETIC BOOK CURSOR
+   A clean, glowing open-book vector cursor for default & pointer states
+   ============================================================ */
+
+/* Default Cursor: Golden Book with Hotspot at top-left tip */
+html, body, * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cfilter id='s' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeDropShadow dx='1' dy='2' stdDeviation='1.5' flood-color='%23000' flood-opacity='0.6'/%3E%3C/filter%3E%3Cg filter='url(%23s)'%3E%3Cpath d='M4 6C4 4.9 4.9 4 6 4H13C13.6 4 14 4.4 14 5V21C14 21.6 13.6 22 13 22H6C4.9 22 4 21.1 4 20V6Z' fill='%230F172A' stroke='%23F59E0B' stroke-width='1.5'/%3E%3Cpath d='M14 5C14 4.4 14.4 4 15 4H22C23.1 4 24 4.9 24 6V20C24 21.1 23.1 22 22 22H15C14.4 22 14 21.6 14 21V5Z' fill='%230F172A' stroke='%23F59E0B' stroke-width='1.5'/%3E%3Cline x1='7' y1='8' x2='11' y2='8' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='7' y1='12' x2='11' y2='12' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='7' y1='16' x2='11' y2='16' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='17' y1='8' x2='21' y2='8' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='17' y1='12' x2='21' y2='12' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='17' y1='16' x2='21' y2='16' stroke='%23CBD5E1' stroke-width='1' stroke-linecap='round'/%3E%3Cpath d='M14 4V13L16 11L18 13V4' fill='%23F59E0B'/%3E%3Ccircle cx='4' cy='4' r='2.5' fill='%2338BDF8' stroke='%23FFFFFF' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 4 4, auto;
+}
+
+/* Pointer Hover Cursor: Illuminated Golden Book with Emerald Bookmark ribbon */
+button, a, input, select, textarea, [role="button"], [role="tab"], .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30' fill='none'%3E%3Cfilter id='g' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='0' stdDeviation='2' flood-color='%23F59E0B' flood-opacity='0.9'/%3E%3C/filter%3E%3Cg filter='url(%23g)'%3E%3Cpath d='M5 7C5 5.5 6.2 4.5 7.5 4.5H14.5V23.5H7.5C6.2 23.5 5 22.5 5 21V7Z' fill='%230B1120' stroke='%23FBBF24' stroke-width='1.8'/%3E%3Cpath d='M14.5 4.5H21.5C22.8 4.5 24 5.5 24 7V21C24 22.5 22.8 23.5 21.5 23.5H14.5V4.5Z' fill='%230B1120' stroke='%23FBBF24' stroke-width='1.8'/%3E%3Cpath d='M14.5 4.5V14L17 11.5L19.5 14V4.5' fill='%2310B981'/%3E%3Ccircle cx='4' cy='4' r='3.2' fill='%23F59E0B' stroke='%23FFFFFF' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E") 4 4, pointer !important;
+}
+
+/* ============================================================
+   GLASSMORPHISM & SPOTIFY BUBBLE TRANSPARENCY STYLES
+   ============================================================ */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.5), 0 0 20px 0 rgba(245, 158, 11, 0.12);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-pill-active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(234, 88, 12, 0.3) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+}
+
+/* Soundwave Waveform Animation Bars */
+@keyframes wave-bounce {
+  0%, 100% {
+    height: 6px;
+    opacity: 0.6;
+  }
+  50% {
+    height: 38px;
+    opacity: 1;
+  }
+}
+
+.animate-wave-bar {
+  animation: wave-bounce 1.2s ease-in-out infinite;
+}
+
+/* Custom Scrollbar for Spotify Glass panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.4);
+}

@@ -1,15 +1,46 @@
 'use client';
 
 import React from 'react';
-import { BengaliBook } from '@/lib/bengali-catalog';
+import { BengaliBook, CoverMotif } from '@/lib/bengali-catalog';
 
-interface BookCoverArtProps {
-  book: BengaliBook;
+export interface BookCoverArtProps {
+  book?: BengaliBook;
+  motif?: CoverMotif;
+  palette?: { bg: string; ink: string; accent: string; border: string };
+  titleBn?: string;
+  titleEn?: string;
+  authorBn?: string;
+  authorEn?: string;
+  publishedYear?: number;
+  accessionNumber?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function BookCoverArt({ book, size = 'md' }: BookCoverArtProps) {
-  const { coverMotif, palette, titleBn, authorBn, publishedYear, accessionNumber } = book;
+export function BookCoverArt({
+  book,
+  motif,
+  palette: propPalette,
+  titleBn: propTitleBn,
+  titleEn: propTitleEn,
+  authorBn: propAuthorBn,
+  authorEn: propAuthorEn,
+  publishedYear: propPublishedYear,
+  accessionNumber: propAccessionNumber,
+  size = 'md',
+}: BookCoverArtProps) {
+  const coverMotif = book?.coverMotif ?? motif ?? 'lotus';
+  const palette = book?.palette ?? propPalette ?? {
+    bg: '#1C1917',
+    ink: '#FAFAF9',
+    accent: '#F59E0B',
+    border: '#78716C',
+  };
+  const titleBn = book?.titleBn ?? propTitleBn ?? '';
+  const titleEn = book?.titleEn ?? propTitleEn ?? '';
+  const authorBn = book?.authorBn ?? propAuthorBn ?? '';
+  const publishedYear = book?.publishedYear ?? propPublishedYear ?? 1970;
+  const accessionNumber = book?.accessionNumber ?? propAccessionNumber ?? 'BG-000';
+  const bookId = book?.id ?? 'cover-art';
 
   return (
     <div
@@ -43,12 +74,12 @@ export function BookCoverArt({ book, size = 'md' }: BookCoverArtProps) {
         aria-hidden="true"
       >
         <defs>
-          <radialGradient id={`glow-${book.id}`} cx="50%" cy="42%" r="55%">
+          <radialGradient id={`glow-${bookId}`} cx="50%" cy="42%" r="55%">
             <stop offset="0%" stopColor={palette.accent} stopOpacity="0.32" />
             <stop offset="100%" stopColor={palette.bg} stopOpacity="0" />
           </radialGradient>
         </defs>
-        <rect width="300" height="400" fill={`url(#glow-${book.id})`} />
+        <rect width="300" height="400" fill={`url(#glow-${bookId})`} />
 
         {/* Corner Alpona / Kala Bhavana Ornamental Flourishes */}
         <g stroke={palette.accent} strokeWidth="1" fill="none" opacity="0.55">
@@ -224,17 +255,21 @@ export function BookCoverArt({ book, size = 'md' }: BookCoverArtProps) {
         >
           {titleBn}
         </p>
-        <p className="mt-1 text-xs font-[family-name:var(--font-display)] italic opacity-85 line-clamp-1">
-          {book.titleEn}
-        </p>
+        {titleEn && (
+          <p className="mt-1 text-xs font-[family-name:var(--font-display)] italic opacity-85 line-clamp-1">
+            {titleEn}
+          </p>
+        )}
         <div
           className="mt-2.5 pt-2 border-t flex items-center justify-between text-[11px] opacity-80"
           style={{ borderColor: `${palette.ink}25` }}
         >
           <span className="font-[family-name:var(--font-bengali)] truncate">{authorBn}</span>
-          <span className="font-[family-name:var(--font-mono)] tabular-nums text-[10px] shrink-0 ml-2">
-            {book.totalDurationFormatted}
-          </span>
+          {book?.totalDurationFormatted && (
+            <span className="font-[family-name:var(--font-mono)] tabular-nums text-[10px] shrink-0 ml-2">
+              {book.totalDurationFormatted}
+            </span>
+          )}
         </div>
       </div>
     </div>

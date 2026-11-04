@@ -10,6 +10,7 @@
 
 import { synthesizeNativeNeuralMp3 } from '@/lib/bangla-neural-tts';
 import {
+  buildIndicTTSSetupAndSynthesisScript,
   directBengaliLiteraryPassage,
   DirectedNarrationSegment,
   preserveAuthenticBangladeshiText,
@@ -511,6 +512,11 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
   engine: string;
   normalizedText: string;
   directedSegments: DirectedNarrationSegment[];
+  batchSynthesisSpec: {
+    batchCsv: string;
+    cliCommand: string;
+    setupScript: string;
+  };
 } | null> {
   const { text, lang, preferCloudGradio = false } = options;
 
@@ -518,6 +524,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
   // Preserves 100% of original wording & natural Bengali punctuation (zero rewriting/summarization)
   const authenticText = preserveAuthenticBangladeshiText(text.slice(0, 3800));
   const directedSegments = directBengaliLiteraryPassage(authenticText, lang);
+  const batchSynthesisSpec = buildIndicTTSSetupAndSynthesisScript(directedSegments, lang);
 
   // Step 2: If custom INDIC_TTS_API_URL is configured (`inference/server.py`), pass normalized segments
   const normalizedForFastPitch = textNormalizer.normalizeText(authenticText, lang);
@@ -529,6 +536,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
       lang,
       normalizedText: authenticText,
       directedSegments,
+      batchSynthesisSpec,
     };
   }
 
@@ -541,6 +549,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
         lang,
         normalizedText: authenticText,
         directedSegments,
+        batchSynthesisSpec,
       };
     }
   }
@@ -576,6 +585,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           engine: 'ai4bharat-indic-tts-bengali-male-artist',
           normalizedText: authenticText,
           directedSegments,
+          batchSynthesisSpec,
         };
       } catch {
         // Try next male artist candidate
@@ -611,6 +621,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           engine: 'ai4bharat-indic-tts-english-male-artist',
           normalizedText: authenticText,
           directedSegments,
+          batchSynthesisSpec,
         };
       } catch {
         // Try next male artist candidate
@@ -629,6 +640,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
       lang,
       normalizedText: authenticText,
       directedSegments,
+      batchSynthesisSpec,
     };
   }
 

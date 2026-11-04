@@ -1,38 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, Lora, JetBrains_Mono, Noto_Serif_Bengali } from 'next/font/google';
 import './globals.css';
 import { CURATED_BENGALI_BOOKS } from '@/lib/bengali-catalog';
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-display',
-});
-
-const lora = Lora({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-body',
-});
-
-const notoBengali = Noto_Serif_Bengali({
-  subsets: ['bengali'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-bengali',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
-});
 
 const appUrl = process.env.APP_URL || 'https://banglagrantha.org';
 
 export const viewport: Viewport = {
-  themeColor: '#9A3412',
+  themeColor: '#0A0D14',
   width: 'device-width',
   initialScale: 1,
 };
@@ -136,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${cormorant.variable} ${lora.variable} ${notoBengali.variable} ${jetbrainsMono.variable}`}
+      className="dark"
     >
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
@@ -149,7 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body
         suppressHydrationWarning
-        className="bg-[#FBF9F5] text-[#1C1917] antialiased selection:bg-[#9A3412]/15 selection:text-[#9A3412]"
+        className="bg-[#0A0D14] text-[#F3F4F6] antialiased selection:bg-[#F59E0B]/30 selection:text-[#FBBF24] overflow-x-hidden"
       >
         {children}
       </body>

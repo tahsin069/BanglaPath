@@ -406,3 +406,88 @@ export function buildDirectedBanglaSSML(options: {
 
   return { ssml, segments };
 }
+
+/**
+ * Formats structured narration segments into the exact pipe-delimited multi-output CSV
+ * (`id|text|speaker_name|gender`) supported by `gokulkarthik/TTS/TTS/bin/synthesize.py`
+ * (`df = pd.read_csv(args.text, sep='|', names=['id', 'text', 'speaker_name', 'gender', ...])`).
+ */
+export function formatSegmentsForIndicTTSBatchCSV(
+  segments: DirectedNarrationSegment[]
+): string {
+  return segments
+    .map((seg) => {
+      const safeId = `seg_${String(seg.index).padStart(2, '0')}`;
+      const cleanText = seg.text.replace(/\|/g, '।').replace(/\r?\n/g, ' ').trim();
+      return `${safeId}|${cleanText}|male|male`;
+    })
+    .join('\n');
+}
+
+/**
+ * Generates the complete AI4Bharat/Indic-TTS + gokulkarthik/Trainer + gokulkarthik/TTS
+ * (`TTS.bin.synthesize` multiple-output CSV) environment setup & synthesis specification
+ * for the supplied directed Bengali narration segments.
+ */
+export function buildIndicTTSSetupAndSynthesisScript(
+  segments: DirectedNarrationSegment[],
+  lang: 'bn' | 'en' = 'bn'
+): {
+  batchCsv: string;
+  cliCommand: string;
+  setupScript: string;
+} {
+  const batchCsv = formatSegmentsForIndicTTSBatchCSV(segments);
+  const modelDir = `models/v1/${lang}`;
+
+  const cliCommand = [
+    `python3 -m TTS.bin.synthesize \\`,
+    `  --text segments_${lang}_male.csv \\`,
+    `  --model_path ${modelDir}/fastpitch/best_model.pth \\`,
+    `  --config_path ${modelDir}/fastpitch/config.json \\`,
+    `  --vocoder_path ${modelDir}/hifigan/best_model.pth \\`,
+    `  --vocoder_config_path ${modelDir}/hifigan/config.json \\`,
+    `  --speakers_file_path ${modelDir}/fastpitch/speakers.pth \\`,
+    `  --speaker_idx "male" \\`,
+    `  --out_path ./outputs_${lang}_male`,
+  ].join('\n');
+
+  const setupScript = `# 1. Create environment
+sudo apt-get install libsndfile1-dev ffmpeg enchant
+conda create -n tts-env
+conda activate tts-env
+
+# 2. Setup PyTorch
+pip3 install -U torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+# 3. Setup Trainer (fixed wandb logger, test_log & distribute.py gpus list)
+git clone https://github.com/gokulkarthik/Trainer
+cd Trainer
+pip3 install -e .[all]
+cd ..
+
+# 4. Setup TTS (added multiple output CSV support for TTS.bin.synthesize)
+git clone https://github.com/gokulkarthik/TTS
+cd TTS
+pip3 install -e .[all]
+cd ..
+
+# 5. Install other requirements
+pip3 install -r requirements.txt
+
+# 6. Write directed Bengali narration segments CSV (id|text|speaker_name|gender)
+cat << 'EOF' > segments_${lang}_male.csv
+${batchCsv}
+EOF
+
+# 7. Run multi-segment Bengali Male Voice Artist synthesis
+mkdir -p ./outputs_${lang}_male
+${cliCommand}`;
+
+  return {
+    batchCsv,
+    cliCommand,
+    setupScript,
+  };
+}
+

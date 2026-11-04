@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  buildIndicTTSSetupAndSynthesisScript,
   directBengaliLiteraryPassage,
   DirectedNarrationSegment,
 } from '@/lib/bengali-narration-director';
@@ -49,10 +50,12 @@ export async function POST(req: NextRequest) {
 
     // Always compute the deterministic, verbatim-preserving Narration Director segments first
     const baseSegments = directBengaliLiteraryPassage(text.slice(0, 4000), targetLang);
+    const baseBatchSpec = buildIndicTTSSetupAndSynthesisScript(baseSegments, targetLang);
 
     if (!useAiDirector || !process.env.GEMINI_API_KEY) {
       return NextResponse.json({
         segments: baseSegments,
+        batchSynthesisSpec: baseBatchSpec,
         directorEngine: 'bengali-narration-director-bn-bd',
         preservedWordIntegrity: true,
       });
