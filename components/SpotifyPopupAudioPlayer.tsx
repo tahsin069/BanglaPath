@@ -9,15 +9,10 @@ import {
   X,
   Volume2,
   VolumeX,
-  Shuffle,
   Repeat,
   Headphones,
-  BookOpen,
-  Sparkles,
-  Maximize2,
-  Minimize2,
-  ListMusic,
-  Check,
+  Star,
+  MoreHorizontal,
 } from 'lucide-react';
 import { BengaliBook, BookChapter } from '@/lib/bengali-catalog';
 import { BookCoverArt } from '@/components/BookCoverArt';
@@ -84,7 +79,6 @@ export function SpotifyPopupAudioPlayer({
   onTogglePlayPause,
   onPrevPassage,
   onNextPassage,
-  onSliderChapterJump,
   onSliderPassageScrub,
   onSelectAudioLang,
   onSetPlaybackSpeed,
@@ -110,48 +104,46 @@ export function SpotifyPopupAudioPlayer({
     return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
   };
 
-  const currentBnText = chapter.paragraphsBn[paragraphIndex] || chapter.paragraphsBn[0] || '';
-  const currentEnText = chapter.paragraphsEn[paragraphIndex] || chapter.paragraphsEn[0] || '';
-
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`${book.titleBn} Audiobook Player`}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-8 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-8 bg-stone-900/30 backdrop-blur-2xl animate-in fade-in duration-200"
     >
-      {/* Background Ambient Colored Glow Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/15 rounded-full filter blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sky-500/15 rounded-full filter blur-[130px] pointer-events-none" />
+      {/* Soft Light Frosted Ambient Orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#557153]/20 rounded-full filter blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/80 rounded-full filter blur-[130px] pointer-events-none" />
 
-      {/* Main Frosted Glass Player Container */}
-      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl bg-[#0B0F17]/95 border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_40px_rgba(245,158,11,0.15)] overflow-hidden">
-        {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+      {/* Main Light Frosted Glass Player Container */}
+      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-[32px] bg-white/80 backdrop-blur-3xl border border-white/95 shadow-[0_32px_90px_rgba(24,29,26,0.22),inset_0_1px_2px_rgba(255,255,255,0.95)] overflow-hidden text-stone-900">
+        {/* Top Frosted Glass Header Bar */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200/80 bg-white/55">
           <div className="flex items-center gap-3">
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="p-2.5 rounded-2xl bg-[#557153]/12 text-[#557153] border border-[#557153]/20">
               <Headphones className="w-4 h-4" />
             </span>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-amber-400/90 font-medium">
-                Now Playing · শ্রুতিনাটক
+              <p className="text-[11px] uppercase tracking-wider text-[#557153] font-semibold">
+                Now Playing · শ্রুতিনাটক ({engineNotice.split('·')[0]?.trim()})
               </p>
-              <h2 className="text-sm sm:text-base font-semibold text-white truncate max-w-md font-[family-name:var(--font-bengali)]">
-                {book.titleBn} <span className="opacity-60 text-xs font-normal">({book.titleEn})</span>
+              <h2 className="text-sm sm:text-base font-bold text-stone-900 truncate max-w-md font-[family-name:var(--font-bengali)]">
+                {book.titleBn}{' '}
+                <span className="text-stone-500 text-xs font-normal">({book.titleEn})</span>
               </h2>
             </div>
           </div>
 
-          {/* Right Action Icons */}
+          {/* Right Action Controls */}
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1 p-1 bg-white/[0.06] rounded-xl border border-white/10">
+            <div className="hidden sm:flex items-center gap-1 p-1 bg-stone-200/60 rounded-full border border-white/80">
               <button
                 type="button"
                 onClick={() => onSelectAudioLang('bn')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all font-[family-name:var(--font-bengali)] ${
+                className={`px-3.5 py-1 text-xs rounded-full font-medium transition-all font-[family-name:var(--font-bengali)] ${
                   audioLangMode === 'bn'
-                    ? 'bg-amber-500 text-stone-950 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
-                    : 'text-stone-300 hover:text-white'
+                    ? 'bg-[#557153] text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
                 বাংলা
@@ -159,10 +151,10 @@ export function SpotifyPopupAudioPlayer({
               <button
                 type="button"
                 onClick={() => onSelectAudioLang('en')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                className={`px-3.5 py-1 text-xs rounded-full font-medium transition-all ${
                   audioLangMode === 'en'
-                    ? 'bg-sky-500 text-stone-950 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
-                    : 'text-stone-300 hover:text-white'
+                    ? 'bg-[#557153] text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
                 English
@@ -170,10 +162,10 @@ export function SpotifyPopupAudioPlayer({
               <button
                 type="button"
                 onClick={() => onSelectAudioLang('bilingual')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                className={`px-3.5 py-1 text-xs rounded-full font-medium transition-all ${
                   audioLangMode === 'bilingual'
-                    ? 'bg-purple-500 text-white shadow-[0_0_12px_rgba(168,85,247,0.5)]'
-                    : 'text-stone-300 hover:text-white'
+                    ? 'bg-[#557153] text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
                 }`}
               >
                 বাংলা+EN
@@ -183,7 +175,7 @@ export function SpotifyPopupAudioPlayer({
             <button
               type="button"
               onClick={onClose}
-              className="p-2.5 rounded-full text-stone-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-200/60 transition-colors"
               aria-label="Close Player"
             >
               <X className="w-5 h-5" />
@@ -192,19 +184,15 @@ export function SpotifyPopupAudioPlayer({
         </div>
 
         {/* Player Body Split: Left Stage & Right Stage */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-y-auto">
-          {/* Left Column (5 cols): Cover, Waveform & Core Controls */}
-          <div className="lg:col-span-5 flex flex-col justify-between space-y-5">
-            {/* Cover Artwork Container with Ambient Glow */}
-            <div className="relative mx-auto w-56 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.7)] border border-white/10 group">
-              <BookCoverArt
-                book={book}
-                size="lg"
-              />
-              {/* Overlay Glass Vignette */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <span className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-y-auto relative">
+          {/* Left Column (5 cols): Cover, About & Floating Sage-Green Player */}
+          <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+            {/* Cover Artwork Container with Soft Elevation Shadow */}
+            <div className="relative mx-auto w-52 sm:w-60 aspect-[3/3.6] rounded-[28px] overflow-hidden shadow-[0_24px_48px_-12px_rgba(24,29,26,0.3)] border-4 border-white/95 group">
+              <BookCoverArt book={book} size="lg" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                <span className="text-[10px] uppercase tracking-wider text-emerald-200 font-semibold">
                   Ch {chapter.number} of {book.chapters.length}
                 </span>
                 <p className="text-xs font-semibold truncate font-[family-name:var(--font-bengali)]">
@@ -213,100 +201,109 @@ export function SpotifyPopupAudioPlayer({
               </div>
             </div>
 
-            {/* Glowing Soundwave Waveform Visualizer */}
+            {/* Waveform Visualizer */}
             <div className="space-y-1">
-              <SpotifySoundwaveVisualizer isPlaying={isPlaying} barCount={32} heightClass="h-20" />
-              <div className="flex justify-between items-center text-[10px] text-stone-400 font-[family-name:var(--font-mono)] px-1">
+              <SpotifySoundwaveVisualizer isPlaying={isPlaying} barCount={30} heightClass="h-16" />
+              <div className="flex justify-between items-center text-[11px] text-stone-500 font-[family-name:var(--font-mono)] px-1">
                 <span>{formatTime(elapsedSeconds)}</span>
-                <span className="text-amber-400 font-semibold">{chapter.durationFormatted}</span>
+                <span className="text-[#557153] font-semibold">{chapter.durationFormatted}</span>
               </div>
             </div>
 
-            {/* Interactive Movable Chapter & Global Scrubber */}
-            <div className="space-y-2">
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, totalBookPassages - 1)}
-                step={1}
-                value={currentGlobalPassageIdx}
-                aria-label="Passage Scrubber"
-                onChange={(e) => onSliderPassageScrub(Number(e.target.value), false)}
-                className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:bg-white/30 transition-colors"
-              />
+            {/* Signature Sage-Olive Green Player Card (like bottom-right card in reference image) */}
+            <div className="sage-glass-player rounded-3xl p-4 text-white space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate font-[family-name:var(--font-bengali)]">
+                    {chapter.titleBn}
+                  </p>
+                  <p className="text-xs text-white/80 truncate">{book.authorBn}</p>
+                </div>
 
-              <div className="flex items-center justify-between text-[11px] text-stone-400">
-                <span className="truncate max-w-[180px]">
-                  {chapter.titleEn}
-                </span>
-                <span className="font-[family-name:var(--font-mono)] text-amber-300">
-                  Passage {paragraphIndex + 1}/{chapter.paragraphsBn.length}
-                </span>
+                {/* Scrubber Slider inside Sage Card */}
+                <div className="w-32 sm:w-36 shrink-0 flex flex-col items-end">
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.max(0, totalBookPassages - 1)}
+                    step={1}
+                    value={currentGlobalPassageIdx}
+                    aria-label="Passage Scrubber"
+                    onChange={(e) => onSliderPassageScrub(Number(e.target.value), false)}
+                    className="w-full h-1 bg-white/35 rounded-lg appearance-none cursor-pointer accent-white"
+                  />
+                  <span className="text-[10px] text-white/75 font-[family-name:var(--font-mono)] mt-1">
+                    Track {paragraphIndex + 1}/{chapter.paragraphsBn.length}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Spotify Transport Controls Bar */}
-            <div className="flex items-center justify-between px-2 pt-2">
-              <button
-                type="button"
-                onClick={onToggleContinuousBookPlay}
-                title={continuousBookPlay ? 'Continuous Chapters On' : 'Single Chapter Play'}
-                className={`p-2 rounded-full transition-colors ${
-                  continuousBookPlay ? 'text-amber-400 bg-amber-400/10' : 'text-stone-500 hover:text-stone-300'
-                }`}
-              >
-                <Repeat className="w-4 h-4" />
-              </button>
+              {/* Transport Icons Row */}
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={onPrevPassage}
+                  className="p-2 text-white/85 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Previous Passage"
+                >
+                  <SkipBack className="w-4 h-4" />
+                </button>
 
-              <button
-                type="button"
-                onClick={onPrevPassage}
-                className="p-3 text-stone-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                aria-label="Previous Passage"
-              >
-                <SkipBack className="w-5 h-5" />
-              </button>
+                <button
+                  type="button"
+                  onClick={onTogglePlayPause}
+                  disabled={isLoadingAudio}
+                  className="p-3 rounded-full bg-white text-[#557153] shadow-md hover:scale-105 active:scale-95 transition-all"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isLoadingAudio ? (
+                    <div className="w-4 h-4 border-2 border-[#557153] border-t-transparent rounded-full animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-4 h-4 fill-[#557153]" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-[#557153] ml-0.5" />
+                  )}
+                </button>
 
-              {/* Big Glowing Spotify Play/Pause Button */}
-              <button
-                type="button"
-                onClick={onTogglePlayPause}
-                disabled={isLoadingAudio}
-                className="p-4 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-400 text-stone-950 shadow-[0_0_25px_rgba(245,158,11,0.6)] hover:scale-105 active:scale-95 transition-all"
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isLoadingAudio ? (
-                  <div className="w-6 h-6 border-2 border-stone-950 border-t-transparent rounded-full animate-spin" />
-                ) : isPlaying ? (
-                  <Pause className="w-6 h-6 fill-stone-950" />
-                ) : (
-                  <Play className="w-6 h-6 fill-stone-950 ml-0.5" />
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={onNextPassage}
+                  className="p-2 text-white/85 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Next Passage"
+                >
+                  <SkipForward className="w-4 h-4" />
+                </button>
 
-              <button
-                type="button"
-                onClick={onNextPassage}
-                className="p-3 text-stone-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                aria-label="Next Passage"
-              >
-                <SkipForward className="w-5 h-5" />
-              </button>
+                <button
+                  type="button"
+                  onClick={onToggleContinuousBookPlay}
+                  title={continuousBookPlay ? 'Continuous Chapters On' : 'Single Chapter Play'}
+                  className={`p-2 rounded-full transition-colors ${
+                    continuousBookPlay ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <Repeat className="w-4 h-4" />
+                </button>
 
-              <button
-                type="button"
-                onClick={onToggleAmbientTanpura}
-                title={ambientTanpura ? 'Santiniketan Tanpura Accompaniment On' : 'Voice Only'}
-                className={`p-2 rounded-full transition-colors ${
-                  ambientTanpura ? 'text-sky-400 bg-sky-400/10' : 'text-stone-500 hover:text-stone-300'
-                }`}
-              >
-                {ambientTanpura ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
+                <button
+                  type="button"
+                  onClick={onToggleAmbientTanpura}
+                  title={ambientTanpura ? 'Santiniketan Tanpura On' : 'Voice Only'}
+                  className={`p-2 rounded-full transition-colors ${
+                    ambientTanpura ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  {ambientTanpura ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <VolumeX className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Speed & RJ Kebria Voice Model Controls */}
-            <div className="space-y-2.5 pt-2 border-t border-white/10">
+            <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1 font-[family-name:var(--font-mono)]">
                   {[0.75, 0.85, 0.92, 1.0, 1.15].map((spd) => (
@@ -314,10 +311,10 @@ export function SpotifyPopupAudioPlayer({
                       key={spd}
                       type="button"
                       onClick={() => onSetPlaybackSpeed(spd)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
                         playbackSpeed === spd
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                          : 'text-stone-400 hover:text-white'
+                          ? 'bg-[#557153] text-white shadow-xs'
+                          : 'bg-white/60 text-stone-600 hover:text-stone-900 border border-stone-200/80'
                       }`}
                     >
                       {spd}x
@@ -328,20 +325,20 @@ export function SpotifyPopupAudioPlayer({
                   <button
                     type="button"
                     onClick={onToggleKebriaSample}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all flex items-center gap-1 ${
                       isPlayingKebriaSample
-                        ? 'bg-emerald-500 text-stone-950 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-                        : 'bg-white/10 hover:bg-white/15 text-amber-300 border border-amber-500/30'
+                        ? 'bg-[#557153] text-white shadow-xs'
+                        : 'bg-white/75 hover:bg-white text-[#557153] border border-[#557153]/30'
                     }`}
                   >
                     {isPlayingKebriaSample ? (
                       <>
-                        <Pause className="w-2.5 h-2.5 fill-stone-950" />
-                        <span>Stop Reference MP3</span>
+                        <Pause className="w-2.5 h-2.5 fill-white" />
+                        <span>Stop Ref MP3</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-2.5 h-2.5 fill-amber-300" />
+                        <Play className="w-2.5 h-2.5 fill-[#557153]" />
                         <span>RJ Kebria Ref MP3</span>
                       </>
                     )}
@@ -351,14 +348,14 @@ export function SpotifyPopupAudioPlayer({
 
               {/* RJ Kebria Voice Model Tone Selector */}
               {onSelectNarratorPersona && (
-                <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+                <div className="grid grid-cols-3 gap-1 p-1 rounded-full bg-stone-200/60 border border-white/80">
                   <button
                     type="button"
                     onClick={() => onSelectNarratorPersona('deep-baritone')}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                    className={`px-2 py-1 rounded-full text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
                       narratorPersona === 'deep-baritone'
-                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
-                        : 'text-stone-300 hover:text-white'
+                        ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     কিবরিয়া · জীবন গল্প
@@ -366,10 +363,10 @@ export function SpotifyPopupAudioPlayer({
                   <button
                     type="button"
                     onClick={() => onSelectNarratorPersona('resonant-bass')}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                    className={`px-2 py-1 rounded-full text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
                       narratorPersona === 'resonant-bass'
-                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
-                        : 'text-stone-300 hover:text-white'
+                        ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     রাতের রেডিও (FM)
@@ -377,10 +374,10 @@ export function SpotifyPopupAudioPlayer({
                   <button
                     type="button"
                     onClick={() => onSelectNarratorPersona('warm-storyteller')}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                    className={`px-2 py-1 rounded-full text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
                       narratorPersona === 'warm-storyteller'
-                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
-                        : 'text-stone-300 hover:text-white'
+                        ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     সাহিত্য পাঠ
@@ -390,43 +387,61 @@ export function SpotifyPopupAudioPlayer({
             </div>
           </div>
 
-          {/* Right Column (7 cols): Synced Reading Text & Narration Director */}
-          <div className="lg:col-span-7 flex flex-col h-full bg-white/[0.03] rounded-2xl border border-white/10 p-4 sm:p-5 overflow-hidden">
-            {/* View Switcher Tabs */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-              <div className="flex items-center gap-1.5">
+          {/* Right Column (7 cols): Transparent Frosted Glass Tracklist & Synchronized Text */}
+          <div className="lg:col-span-7 flex flex-col h-full bg-white/55 backdrop-blur-2xl rounded-3xl border border-white/90 p-5 shadow-xs overflow-hidden relative">
+            {/* Header Info & Sage Stars (Like "4 Your Eyez Only." in reference image) */}
+            <div className="flex items-start justify-between gap-4 pb-3 border-b border-stone-200/70 mb-3">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-stone-900 font-[family-name:var(--font-bengali)]">
+                  {book.titleBn}
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  {book.authorBn} <span className="mx-1.5">•</span> MP3{' '}
+                  <span className="mx-1.5">•</span> {book.chapters.length} Chapters
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-[#557153] pt-1">
+                <Star className="w-4 h-4 fill-[#557153]" />
+                <Star className="w-4 h-4 fill-[#557153]" />
+                <Star className="w-4 h-4 fill-[#557153]" />
+              </div>
+            </div>
+
+            {/* View Switcher Pill Tabs (Reference Image Style) */}
+            <div className="flex items-center justify-between pb-3 mb-2">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('reader')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
                     activeTab === 'reader'
-                      ? 'bg-white/15 text-white shadow-xs'
-                      : 'text-stone-400 hover:text-white'
+                      ? 'bg-[#557153] text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
                   }`}
                 >
-                  Synchronized Text (পাঠ)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('director')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors font-[family-name:var(--font-bengali)] ${
-                    activeTab === 'director'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'text-stone-400 hover:text-white'
-                  }`}
-                >
-                  পাঠ নির্দেশনা ({activeDirectedSegments.length})
+                  Passages (পাঠ)
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('queue')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
                     activeTab === 'queue'
-                      ? 'bg-white/15 text-white shadow-xs'
-                      : 'text-stone-400 hover:text-white'
+                      ? 'bg-[#557153] text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
                   }`}
                 >
                   Chapters ({book.chapters.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('director')}
+                  className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all font-[family-name:var(--font-bengali)] ${
+                    activeTab === 'director'
+                      ? 'bg-[#557153] text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
+                  }`}
+                >
+                  পাঠ নির্দেশনা ({activeDirectedSegments.length})
                 </button>
               </div>
 
@@ -434,107 +449,75 @@ export function SpotifyPopupAudioPlayer({
                 <button
                   type="button"
                   onClick={onPlayAllDirectedSegments}
-                  className="px-2.5 py-1 text-[11px] font-medium text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-md transition-colors flex items-center gap-1 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
+                  className="px-3 py-1 text-[11px] font-medium text-white bg-[#557153] hover:bg-[#435B41] rounded-full transition-colors flex items-center gap-1 shadow-xs"
                 >
-                  <Play className="w-3 h-3 fill-stone-950" />
-                  <span>Play All (speaker_idx=male)</span>
+                  <Play className="w-3 h-3 fill-white" />
+                  <span>Play All</span>
                 </button>
               )}
             </div>
 
-            {/* TAB 1: SYNCHRONIZED TEXT */}
+            {/* TAB 1: SYNCHRONIZED PASSAGES (Styled with Sage-Green Active Row like Reference Image) */}
             {activeTab === 'reader' && (
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
                 {chapter.paragraphsBn.map((pBn, idx) => {
                   const isCurrent = idx === paragraphIndex;
                   const pEn = chapter.paragraphsEn[idx] || '';
                   return (
                     <div
                       key={idx}
-                      className={`p-3.5 rounded-xl border transition-all ${
+                      className={`p-3.5 rounded-2xl transition-all ${
                         isCurrent
-                          ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
-                          : 'bg-white/[0.02] border-white/5 opacity-70 hover:opacity-100'
+                          ? 'bg-[#557153] text-white shadow-[0_10px_25px_rgba(85,113,83,0.3)]'
+                          : 'bg-white/60 hover:bg-white/90 text-stone-800 border border-white/80'
                       }`}
                     >
-                      {/* Bengali Text */}
+                      <div className="flex items-center justify-between text-[11px] mb-1.5">
+                        <span className="font-[family-name:var(--font-mono)] font-semibold flex items-center gap-1.5">
+                          {isCurrent ? (
+                            <Play className="w-3 h-3 fill-white" />
+                          ) : (
+                            <span className="text-stone-400">{idx + 1}</span>
+                          )}
+                          <span>Passage 0{idx + 1}</span>
+                        </span>
+                        <MoreHorizontal
+                          className={`w-4 h-4 ${isCurrent ? 'text-white/80' : 'text-stone-400'}`}
+                        />
+                      </div>
+
                       {(audioLangMode === 'bn' || audioLangMode === 'bilingual') && (
-                        <p className={`text-sm sm:text-base leading-relaxed font-[family-name:var(--font-bengali)] ${
-                          isCurrent ? 'text-amber-100 font-medium' : 'text-stone-300'
-                        }`}>
+                        <p
+                          className={`text-sm sm:text-base leading-relaxed font-[family-name:var(--font-bengali)] ${
+                            isCurrent ? 'text-white font-medium' : 'text-stone-800'
+                          }`}
+                        >
                           {pBn}
                         </p>
                       )}
 
-                      {/* English Text */}
                       {(audioLangMode === 'en' || audioLangMode === 'bilingual') && (
-                        <p className={`mt-2 text-xs sm:text-sm leading-relaxed text-stone-400 ${
-                          audioLangMode === 'bilingual' ? 'italic' : isCurrent ? 'text-stone-200' : ''
-                        }`}>
+                        <p
+                          className={`mt-2 text-xs sm:text-sm leading-relaxed ${
+                            isCurrent
+                              ? 'text-white/85'
+                              : audioLangMode === 'bilingual'
+                              ? 'text-stone-500 italic'
+                              : 'text-stone-700'
+                          }`}
+                        >
                           {pEn}
                         </p>
                       )}
-
-                      {isCurrent && (
-                        <div className="mt-2.5 flex items-center justify-between text-[10px] text-amber-400/90 font-medium pt-2 border-t border-amber-500/20">
-                          <span>Currently Narrating · পাঠ চলছে</span>
-                          <span className="font-[family-name:var(--font-mono)]">
-                            Passage {idx + 1}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
               </div>
             )}
 
-            {/* TAB 2: NARRATION DIRECTOR SEGMENTS */}
-            {activeTab === 'director' && (
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                {activeDirectedSegments.map((seg) => {
-                  const isSegPlaying = activeDirectedSegmentId === seg.id;
-                  return (
-                    <div
-                      key={seg.id}
-                      className={`p-2.5 rounded-xl border transition-colors ${
-                        isSegPlaying
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-100'
-                          : 'bg-white/[0.02] border-white/5 text-stone-300 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-amber-400 mb-1">
-                        <span className="font-[family-name:var(--font-mono)] font-semibold">
-                          SEG 0{seg.index} · {seg.typeLabelBn}
-                        </span>
-                        <span className="font-[family-name:var(--font-bengali)] text-stone-400">
-                          {seg.emotionLabelBn}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm leading-relaxed font-[family-name:var(--font-bengali)]">
-                        {seg.text}
-                      </p>
-                      <div className="mt-2 flex items-center justify-between text-[10px] text-stone-500">
-                        <span className="font-[family-name:var(--font-bengali)]">
-                          {seg.pauseCueBn}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onSpeakDirectedSegment(seg)}
-                          className="px-2 py-0.5 rounded bg-white/10 hover:bg-amber-500 hover:text-stone-950 text-white transition-colors"
-                        >
-                          {isSegPlaying ? 'Speaking...' : 'Speak'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* TAB 3: CHAPTERS QUEUE */}
+            {/* TAB 2: CHAPTERS QUEUE (Exact Tracklist Look from Reference Image) */}
             {activeTab === 'queue' && (
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
                 {book.chapters.map((ch, idx) => {
                   const isCurrentCh = idx === chapterIndex;
                   return (
@@ -542,22 +525,105 @@ export function SpotifyPopupAudioPlayer({
                       key={ch.id}
                       type="button"
                       onClick={() => onSelectChapter(idx)}
-                      className={`w-full text-left p-3 rounded-xl border transition-colors flex items-center justify-between gap-3 ${
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between gap-3 ${
                         isCurrentCh
-                          ? 'bg-amber-500/15 border-amber-500 text-white'
-                          : 'bg-white/[0.02] border-white/5 text-stone-300 hover:border-white/20'
+                          ? 'bg-[#557153] text-white shadow-[0_8px_20px_rgba(85,113,83,0.3)]'
+                          : 'bg-white/45 hover:bg-white/80 text-stone-800'
                       }`}
                     >
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-semibold truncate font-[family-name:var(--font-bengali)]">
-                          {ch.titleBn}
-                        </p>
-                        <p className="text-[11px] text-stone-400 truncate">{ch.titleEn}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-5 text-xs font-[family-name:var(--font-mono)] flex items-center justify-center shrink-0">
+                          {isCurrentCh ? (
+                            <Play className="w-3.5 h-3.5 fill-white" />
+                          ) : (
+                            <span className="text-stone-500">{ch.number}</span>
+                          )}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold truncate font-[family-name:var(--font-bengali)]">
+                            {ch.titleBn}
+                          </p>
+                          <p
+                            className={`text-[11px] truncate ${
+                              isCurrentCh ? 'text-white/80' : 'text-stone-500'
+                            }`}
+                          >
+                            {ch.titleEn}
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-[11px] font-[family-name:var(--font-mono)] text-amber-400 shrink-0">
-                        {ch.durationFormatted}
-                      </span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span
+                          className={`text-[11px] font-[family-name:var(--font-mono)] ${
+                            isCurrentCh ? 'text-white/90' : 'text-stone-500'
+                          }`}
+                        >
+                          {ch.durationFormatted}
+                        </span>
+                        <MoreHorizontal
+                          className={`w-4 h-4 ${isCurrentCh ? 'text-white' : 'text-stone-400'}`}
+                        />
+                      </div>
                     </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* TAB 3: NARRATION DIRECTOR SEGMENTS */}
+            {activeTab === 'director' && (
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                {activeDirectedSegments.map((seg) => {
+                  const isSegPlaying = activeDirectedSegmentId === seg.id;
+                  return (
+                    <div
+                      key={seg.id}
+                      className={`p-3 rounded-xl border transition-colors ${
+                        isSegPlaying
+                          ? 'bg-[#557153] border-[#557153] text-white shadow-sm'
+                          : 'bg-white/65 border-white/85 text-stone-800 hover:bg-white/90'
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center justify-between text-[10px] mb-1 ${
+                          isSegPlaying ? 'text-white/90' : 'text-[#557153]'
+                        }`}
+                      >
+                        <span className="font-[family-name:var(--font-mono)] font-semibold">
+                          SEG 0{seg.index} · {seg.typeLabelBn}
+                        </span>
+                        <span
+                          className={`font-[family-name:var(--font-bengali)] ${
+                            isSegPlaying ? 'text-white/85' : 'text-stone-500'
+                          }`}
+                        >
+                          {seg.emotionLabelBn}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm leading-relaxed font-[family-name:var(--font-bengali)]">
+                        {seg.text}
+                      </p>
+                      <div
+                        className={`mt-2 flex items-center justify-between text-[10px] ${
+                          isSegPlaying ? 'text-white/80' : 'text-stone-500'
+                        }`}
+                      >
+                        <span className="font-[family-name:var(--font-bengali)]">
+                          {seg.pauseCueBn}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onSpeakDirectedSegment(seg)}
+                          className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
+                            isSegPlaying
+                              ? 'bg-white text-[#557153]'
+                              : 'bg-[#557153] text-white hover:bg-[#435B41]'
+                          }`}
+                        >
+                          {isSegPlaying ? 'Speaking...' : 'Speak'}
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>

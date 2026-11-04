@@ -22,10 +22,11 @@ import {
   Home,
   Compass,
   Maximize2,
-  Shuffle,
   Repeat,
-  Sparkles,
-  Layers,
+  ArrowLeft,
+  Heart,
+  MoreHorizontal,
+  Star,
 } from 'lucide-react';
 import {
   GENRE_CATEGORIES,
@@ -1184,112 +1185,66 @@ export default function BanglaGranthaApp() {
     { bg: string; text: string; muted: string; border: string; highlight: string }
   > = {
     alabaster: {
-      bg: 'bg-white/[0.04]',
-      text: 'text-[#F3F4F6]',
-      muted: 'text-[#9CA3AF]',
-      border: 'border-white/10',
-      highlight: 'bg-amber-500/[0.12] border-amber-500/40',
+      bg: 'bg-white/75 backdrop-blur-2xl shadow-[0_20px_50px_rgba(24,29,26,0.06)]',
+      text: 'text-stone-900',
+      muted: 'text-stone-500',
+      border: 'border-white/90',
+      highlight: 'bg-[#557153]/12 border-[#557153]/45',
     },
     sepia: {
-      bg: 'bg-[#1C1814]/85',
-      text: 'text-[#F3E8D8]',
-      muted: 'text-[#C5B49E]',
-      border: 'border-amber-900/40',
-      highlight: 'bg-amber-600/[0.18] border-amber-500/50',
+      bg: 'bg-[#F5EFE2]/88 backdrop-blur-xl shadow-sm',
+      text: 'text-stone-900',
+      muted: 'text-stone-600',
+      border: 'border-stone-300/80',
+      highlight: 'bg-[#557153]/15 border-[#557153]/50',
     },
     night: {
-      bg: 'bg-[#060910]/90',
+      bg: 'bg-[#181D1A]/95 backdrop-blur-xl shadow-lg',
       text: 'text-[#F9FAFB] tracking-[0.01em]',
-      muted: 'text-[#94A3B8]',
-      border: 'border-white/5',
-      highlight: 'bg-sky-500/[0.12] border-sky-500/50',
+      muted: 'text-stone-400',
+      border: 'border-white/10',
+      highlight: 'bg-[#557153]/30 border-[#557153]',
     },
   };
 
   const currentPaper = paperStyles[paperTheme];
+  const activeBookIndex = Math.max(
+    0,
+    books.findIndex((b) => b.id === activeBook.id)
+  );
+  const prevCarouselBook = books[(activeBookIndex - 1 + books.length) % books.length];
+  const nextCarouselBook = books[(activeBookIndex + 1) % books.length];
+  const isCurrentBookmarked = bookmarks.includes(activeBook.id);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0D14] text-[#F3F4F6] font-[family-name:var(--font-body)] pb-24 relative overflow-x-hidden selection:bg-amber-500/25 selection:text-amber-300">
+    <div className="min-h-screen flex flex-col bg-[#ECF0EC] text-stone-900 font-[family-name:var(--font-body)] pb-28 relative overflow-x-hidden selection:bg-[#557153]/20 selection:text-[#3A4F39]">
       <OfflineIndicator />
 
-      {/* Background Ambient Colored Glow Orbs (Spotify Glass Canvas) */}
-      <div className="fixed top-[-10%] left-[-5%] w-[500px] h-[500px] bg-amber-500/[0.12] rounded-full filter blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-[25%] right-[-5%] w-[550px] h-[550px] bg-sky-500/[0.10] rounded-full filter blur-[150px] pointer-events-none z-0" />
-      <div className="fixed bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-purple-600/[0.10] rounded-full filter blur-[160px] pointer-events-none z-0" />
+      {/* Atmospheric Blurred Light & Cover Aura Orbs (True Transparent Glass Backdrop) */}
+      <div className="fixed top-[-8%] left-[-4%] w-[560px] h-[560px] bg-white/90 rounded-full filter blur-[110px] pointer-events-none z-0" />
+      <div className="fixed top-[18%] left-[28%] w-[520px] h-[520px] bg-[#557153]/[0.14] rounded-full filter blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-[20%] right-[-5%] w-[520px] h-[520px] bg-amber-200/35 rounded-full filter blur-[150px] pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] left-[15%] w-[640px] h-[640px] bg-white/85 rounded-full filter blur-[130px] pointer-events-none z-0" />
 
-      {/* SPOTIFY GLASS TOP BAR */}
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 py-3 bg-[#0A0D14]/85 backdrop-blur-2xl border-b border-white/10 relative">
-        {/* Brand Zone */}
-        <div className="flex items-center gap-3 shrink-0">
-          <a
-            href="#top"
-            className="text-lg sm:text-xl font-bold tracking-tight text-white font-[family-name:var(--font-display)] flex items-center gap-2 whitespace-nowrap"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.9)] animate-pulse" />
-            <span>Bangla<span className="text-amber-400">Grantha</span></span>
-          </a>
-        </div>
+      {/* LIGHT FROSTED GLASS TOP BAR (Inspired by Reference UI) */}
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-4 px-4 sm:px-8 lg:px-12 py-3.5 bg-white/70 backdrop-blur-2xl border-b border-white/90 shadow-[0_4px_24px_rgba(24,29,26,0.04)]">
+        {/* Zone 1: Brand Wordmark */}
+        <a
+          href="#top"
+          className="text-lg sm:text-xl font-bold tracking-tight text-stone-900 font-[family-name:var(--font-display)] flex items-center gap-2 whitespace-nowrap shrink-0"
+        >
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-[#557153] text-white text-xs font-bold shadow-xs">
+            ব
+          </span>
+          <span>
+            Bangla<span className="text-[#557153]">Grantha</span>
+          </span>
+        </a>
 
-        {/* Center Zone: Mini Now Playing Capsule (like Spotify in image_6980deb6.png) & Search */}
-        <div className="flex-1 max-w-2xl flex items-center gap-3">
-          {/* Mini Now-Playing Glass Capsule */}
-          <div
-            onClick={() => setShowPopupPlayer(true)}
-            title="Click to open full Spotify audio player"
-            className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 backdrop-blur-xl transition-all cursor-pointer shadow-xs shrink-0 group"
-          >
-            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-white/15">
-              <BookCoverArt
-                book={activeBook}
-                size="sm"
-              />
-            </div>
-            <div className="text-left min-w-0 pr-1">
-              <p className="text-xs font-semibold text-white truncate max-w-[130px] font-[family-name:var(--font-bengali)] group-hover:text-amber-300 transition-colors">
-                {activeBook.titleBn}
-              </p>
-              <p className="text-[10px] text-stone-400 truncate max-w-[130px]">
-                {activeBook.authorBn}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeParagraphIdx > 0) {
-                    setActiveParagraphIdx(activeParagraphIdx - 1);
-                    if (isPlaying) startPlayback(activeParagraphIdx - 1, audioLangMode, activeChapterIdx, activeBook);
-                  }
-                }}
-                className="p-1 text-stone-400 hover:text-white transition-colors"
-              >
-                <SkipBack className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={togglePlayPause}
-                className="p-1.5 rounded-full bg-amber-500 text-stone-950 hover:bg-amber-400 transition-all shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-              >
-                {isPlaying ? <Pause className="w-3 h-3 fill-stone-950" /> : <Play className="w-3 h-3 fill-stone-950 ml-0.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
-                    setActiveParagraphIdx(activeParagraphIdx + 1);
-                    if (isPlaying) startPlayback(activeParagraphIdx + 1, audioLangMode, activeChapterIdx, activeBook);
-                  }
-                }}
-                className="p-1 text-stone-400 hover:text-white transition-colors"
-              >
-                <SkipForward className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Search Glass Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* Zone 2: Minimal Centered Frosted Glass Search Input (Like "Search..." in Reference UI) */}
+        <div className="flex-1 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="search"
               value={catalogSearch}
@@ -1297,14 +1252,14 @@ export default function BanglaGranthaApp() {
                 setCatalogSearch(e.target.value);
                 setSelectedGenre('all');
               }}
-              placeholder="Search books, authors (হুমায়ূন আহমেদ, জাফর ইকবাল, ফেলুদা...)"
-              className="w-full pl-10 pr-20 py-2 text-xs sm:text-sm bg-white/[0.05] hover:bg-white/[0.08] focus:bg-white/[0.1] border border-white/10 focus:border-amber-500/60 rounded-full text-white placeholder:text-stone-400 focus:outline-none transition-all shadow-xs"
+              placeholder="Search books, writers (হুমায়ূন আহমেদ, জাফর ইকবাল, ফেলুদা...)"
+              className="w-full pl-10 pr-16 py-2 text-xs sm:text-sm bg-white/75 hover:bg-white/95 focus:bg-white border border-stone-200/90 focus:border-[#557153] rounded-full text-stone-900 placeholder:text-stone-400 focus:outline-none transition-all shadow-2xs"
             />
             {catalogSearch.trim() && (
               <button
                 type="button"
                 onClick={() => setCatalogSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-medium text-stone-400 hover:text-white bg-white/10 rounded-full transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-medium text-stone-600 hover:text-stone-900 bg-stone-200/70 rounded-full transition-colors"
               >
                 Clear
               </button>
@@ -1312,14 +1267,16 @@ export default function BanglaGranthaApp() {
           </div>
         </div>
 
-        {/* Right Zone: Language Toggle, Dedicated Popup Player Button & Install */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden sm:flex items-center gap-1 p-1 bg-white/[0.05] rounded-full border border-white/10">
+        {/* Zone 3: Language Switcher, Popup Player & Install */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="hidden sm:flex items-center gap-1 p-1 bg-stone-200/65 rounded-full border border-white/80">
             <button
               type="button"
               onClick={() => handleSelectAudioLanguage('bn', true)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors font-[family-name:var(--font-bengali)] ${
-                audioLangMode === 'bn' ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs' : 'text-stone-300 hover:text-white'
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-all font-[family-name:var(--font-bengali)] ${
+                audioLangMode === 'bn'
+                  ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               বাংলা
@@ -1327,8 +1284,10 @@ export default function BanglaGranthaApp() {
             <button
               type="button"
               onClick={() => handleSelectAudioLanguage('en', true)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${
-                audioLangMode === 'en' ? 'bg-sky-500 text-stone-950 font-semibold shadow-xs' : 'text-stone-300 hover:text-white'
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
+                audioLangMode === 'en'
+                  ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
               }`}
             >
               EN
@@ -1338,68 +1297,555 @@ export default function BanglaGranthaApp() {
           <button
             type="button"
             onClick={() => setShowPopupPlayer(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 rounded-full transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-white bg-[#557153] hover:bg-[#435B41] rounded-full transition-all shadow-[0_6px_16px_rgba(85,113,83,0.3)] whitespace-nowrap"
           >
             <Headphones className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Audio Player</span>
+            <span className="hidden sm:inline">Popup Player</span>
           </button>
 
           <PWAInstallButton />
         </div>
       </header>
 
-      {/* MAIN SPOTIFY GLASS DASHBOARD */}
-      <div id="top" className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-10 py-6 relative z-10 space-y-8">
-        
-        {/* Top Greeting & Renowned Writers Quick-Access Bar */}
-        <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-amber-400/90 font-medium font-[family-name:var(--font-mono)]">
-                Santiniketan &amp; Global Bengali Digital Archive
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-[family-name:var(--font-display)] mt-0.5">
-                স্বাগতম, গ্রন্থপ্রেমী <span className="text-amber-400 font-normal text-lg sm:text-xl font-[family-name:var(--font-bengali)]">· Welcome Back</span>
-              </h1>
-            </div>
+      {/* MAIN LIGHT TRANSPARENT GLASS SHOWCASE CONTAINER */}
+      <div
+        id="top"
+        className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-10 py-6 relative z-10 space-y-8"
+      >
+        {/* PRIMARY FROSTED GLASS STAGE (Modeled after Reference UI `image_f3a0137e.png`) */}
+        <div className="rounded-[36px] glass-panel p-5 sm:p-8 lg:p-10 relative overflow-hidden">
+          {/* Center Soft Blurred Silhouette Backdrop (Produces the Frosted Album Depth behind the Tracklist) */}
+          <div
+            aria-hidden="true"
+            className="absolute top-12 left-1/2 -translate-x-1/2 w-[380px] sm:w-[460px] h-[380px] sm:h-[460px] rounded-full bg-gradient-to-b from-stone-400/25 via-[#557153]/18 to-transparent blur-3xl pointer-events-none"
+          />
 
-            <div className="flex items-center gap-2 shrink-0">
+          {/* Top Navigation Row inside Frosted Frame (Back Arrow + Centered Pill Tabs + Menu) */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pb-6">
+            {/* Left: Back Arrow + Active Writer Name (like `← J Cole` in reference image) */}
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => selectBook(CURATED_BENGALI_BOOKS[0], true, false, 'bn')}
-                className="px-4 py-2 rounded-full text-xs font-semibold text-stone-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 transition-all shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1.5 whitespace-nowrap"
+                onClick={() => selectBook(prevCarouselBook, false, false)}
+                title={`Switch to ${prevCarouselBook.titleEn}`}
+                className="p-2 rounded-full bg-white/75 hover:bg-white text-stone-800 border border-stone-200/80 transition-colors shadow-2xs"
+                aria-label="Previous Book in Archive"
               >
-                <Play className="w-3.5 h-3.5 fill-stone-950" />
-                <span className="font-[family-name:var(--font-bengali)]">অপদার্থ শুনুন</span>
+                <ArrowLeft className="w-4 h-4" />
               </button>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-stone-900 font-[family-name:var(--font-bengali)]">
+                  {activeBook.authorBn}
+                </p>
+                <p className="text-[11px] text-stone-500">{activeBook.authorEn}</p>
+              </div>
+            </div>
 
+            {/* Center: Clean Category / View Pill Bar (`Home`, `Writers`, `Audiobooks`, `Chapters`, `Radio`) */}
+            <nav
+              aria-label="Showcase Sections"
+              className="flex items-center gap-2 sm:gap-5 overflow-x-auto py-1"
+            >
+              {[
+                { id: 'home' as const, label: 'Home', href: '#top' },
+                { id: 'catalog' as const, label: 'Writers', href: '#writers-strip' },
+                { id: 'reader' as const, label: 'Audiobooks', href: '#catalog' },
+                { id: 'sources' as const, label: 'Chapters', href: '#reader-studio' },
+                { id: 'digitize' as const, label: 'Radio', href: '#federated-sources' },
+              ].map((tab) => {
+                const isActive = activeNavTab === tab.id;
+                return (
+                  <a
+                    key={tab.id}
+                    href={tab.href}
+                    onClick={() => setActiveNavTab(tab.id)}
+                    className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                      isActive
+                        ? 'bg-[#557153] text-white shadow-[0_6px_16px_rgba(85,113,83,0.35)]'
+                        : 'text-stone-700 hover:text-stone-950 hover:bg-white/60'
+                    }`}
+                  >
+                    {tab.label}
+                  </a>
+                );
+              })}
+            </nav>
+
+            {/* Right: Digitize / Fullscreen Player Trigger */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDigitizeForm((prev) => !prev)}
+                className="px-3 py-1.5 rounded-full bg-white/75 hover:bg-white text-stone-700 hover:text-stone-900 border border-stone-200/80 text-xs font-medium transition-colors whitespace-nowrap"
+              >
+                + Digitize Book
+              </button>
               <button
                 type="button"
                 onClick={() => setShowPopupPlayer(true)}
-                className="px-3.5 py-2 rounded-full glass-panel hover:bg-white/10 text-stone-300 hover:text-white transition-colors text-xs font-medium flex items-center gap-1.5"
-                title="Open Fullscreen Spotify Player"
+                className="p-2 rounded-full bg-white/75 hover:bg-white text-stone-700 border border-stone-200/80 transition-colors"
+                aria-label="Open Fullscreen Audio Player"
               >
-                <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Popup Player</span>
+                <MoreHorizontal className="w-4 h-4" />
               </button>
             </div>
           </div>
 
+          {/*Instant Search Results Dropdown when typing in top search bar*/}
+          {catalogSearch.trim() !== '' && (
+            <div className="relative z-20 mb-6 p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-stone-200/90 shadow-sm">
+              <div className="flex items-center justify-between text-xs text-stone-600 mb-3">
+                <span>
+                  Showing <strong>{filteredBooks.length}</strong> matching book(s) for &ldquo;
+                  {catalogSearch}&rdquo;:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCatalogSearch('')}
+                  className="text-[#557153] font-semibold hover:underline"
+                >
+                  Clear Search
+                </button>
+              </div>
+
+              {filteredBooks.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto pr-1">
+                  {filteredBooks.map((book) => (
+                    <div
+                      key={book.id}
+                      className="p-3 rounded-xl bg-white/90 border border-stone-200/80 flex items-center justify-between gap-3 hover:border-[#557153] transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-stone-900 font-[family-name:var(--font-bengali)] truncate">
+                          {book.titleBn}
+                        </p>
+                        <p className="text-xs text-stone-500 truncate">
+                          {book.authorBn} · {book.chapters.length} Ch
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => selectBook(book, false, true)}
+                          className="px-2.5 py-1 text-xs font-medium text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-lg whitespace-nowrap"
+                        >
+                          Read
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selectBook(book, true, false, 'bn')}
+                          className="px-2.5 py-1 text-xs font-semibold text-white bg-[#557153] hover:bg-[#435B41] rounded-lg whitespace-nowrap font-[family-name:var(--font-bengali)]"
+                        >
+                          শুনুন
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-stone-100/80 flex items-center justify-between gap-2 text-xs text-stone-600">
+                  <span>No local catalog matches. Search connected global repositories:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFederatedQuery(catalogSearch.trim());
+                      document
+                        .getElementById('federated-sources')
+                        ?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-3 py-1 text-xs font-medium text-white bg-[#557153] rounded-lg whitespace-nowrap"
+                  >
+                    Search Global Archives
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* MAIN SHOWCASE BODY: Peeking Left Cover + Featured Cover & About + Transparent Tracklist + Peeking Right Cover */}
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2">
+            {/* LEFT COLUMN (4 cols): Peeking Previous Cover + Main Featured Book Cover + Icons + "About" */}
+            <div className="lg:col-span-5 flex items-start gap-4">
+              {/* Peeking Left Book Cover (like Forest Hills Drive on the left of reference image) */}
+              <div
+                onClick={() => selectBook(prevCarouselBook, false, false)}
+                title={`Previous: ${prevCarouselBook.titleBn} (${prevCarouselBook.titleEn})`}
+                className="hidden sm:block w-20 md:w-24 aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg border-2 border-white/85 opacity-75 hover:opacity-100 hover:scale-[1.03] transition-all cursor-pointer shrink-0 mt-6 relative"
+              >
+                <BookCoverArt book={prevCarouselBook} size="sm" />
+              </div>
+
+              {/* Featured Book Cover + Action Bar + About */}
+              <div className="flex-1 max-w-[300px] mx-auto">
+                <div
+                  onClick={togglePlayPause}
+                  className="aspect-[3/3.5] rounded-[28px] overflow-hidden shadow-[0_28px_60px_-12px_rgba(24,29,26,0.32)] border-4 border-white/95 relative group cursor-pointer"
+                >
+                  <BookCoverArt book={activeBook} size="lg" />
+                  <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="p-4 rounded-full bg-white text-[#557153] shadow-xl group-hover:scale-110 transition-transform">
+                      {isPlaying ? (
+                        <Pause className="w-6 h-6 fill-[#557153]" />
+                      ) : (
+                        <Play className="w-6 h-6 fill-[#557153] ml-0.5" />
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Icon Trio under Cover (`Share`, `Heart/Bookmark`, `More/Popup`) — Exact Match to Reference Image */}
+                <div className="mt-5 flex items-center justify-center gap-8 text-stone-700">
+                  <button
+                    type="button"
+                    onClick={handleShareCurrentBook}
+                    title="Share Book Link"
+                    className="p-2 rounded-full hover:bg-white/80 hover:text-stone-950 transition-colors"
+                  >
+                    {copiedShareLink ? (
+                      <Check className="w-4 h-4 text-[#557153]" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => toggleBookmark(activeBook.id)}
+                    title="Bookmark Book"
+                    className="p-2 rounded-full hover:bg-white/80 transition-colors"
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${
+                        isCurrentBookmarked
+                          ? 'fill-[#557153] text-[#557153]'
+                          : 'text-stone-800 hover:text-[#557153]'
+                      }`}
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPopupPlayer(true)}
+                    title="Open Fullscreen Audio Player"
+                    className="p-2 rounded-full hover:bg-white/80 hover:text-stone-950 transition-colors"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* "About" Description Block under Cover — Exact Match to Reference Image */}
+                <div className="mt-4 pt-3 border-t border-stone-200/70 text-left">
+                  <h2 className="text-xs font-bold text-stone-900">About</h2>
+                  <p className="mt-1 text-xs text-stone-600 leading-relaxed line-clamp-3">
+                    Published in {activeBook.publishedYear},{' '}
+                    <strong className="font-[family-name:var(--font-bengali)] text-stone-800">
+                      {activeBook.titleBn}
+                    </strong>{' '}
+                    ({activeBook.titleEn}) by {activeBook.authorEn} — {activeBook.synopsisEn}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN (7 cols): Transparent Frosted Tracklist + Peeking Right Cover + Floating Sage-Olive Mini-Player */}
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-5 relative">
+              <div className="flex items-start gap-5">
+                {/* Center-Right Transparent Tracklist Stage */}
+                <div className="flex-1 min-w-0">
+                  {/* Book Title, Subtitle & 3 Sage Stars (Like "4 Your Eyez Only. ★★★" in Reference Image) */}
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="min-w-0">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight font-[family-name:var(--font-bengali)] truncate">
+                        {activeBook.titleBn}{' '}
+                        <span className="text-lg sm:text-xl font-normal text-stone-600 font-[family-name:var(--font-display)]">
+                          · {activeBook.titleEn}
+                        </span>
+                      </h1>
+                      <p className="text-xs text-stone-600 mt-1 flex flex-wrap items-center gap-2">
+                        <span className="font-[family-name:var(--font-bengali)] font-medium text-stone-800">
+                          {activeBook.authorBn}
+                        </span>
+                        <span>•</span>
+                        <span>MP3 (RJ Kebria Voice Model)</span>
+                        <span>•</span>
+                        <span>
+                          {activeBook.chapters.length} Chapters · {activeChapter.paragraphsBn.length}{' '}
+                          Passages
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* 3 Sage-Olive Rating Stars */}
+                    <div
+                      className="flex items-center gap-1 text-[#557153] shrink-0 pt-1.5"
+                      aria-label="Curated Masterpiece"
+                    >
+                      <Star className="w-4 h-4 fill-[#557153]" />
+                      <Star className="w-4 h-4 fill-[#557153]" />
+                      <Star className="w-4 h-4 fill-[#557153]" />
+                    </div>
+                  </div>
+
+                  {/* Quick Chapter Selector Pills above Tracklist */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2">
+                    {activeBook.chapters.map((ch, idx) => {
+                      const isCurrentCh = idx === activeChapterIdx;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => handleSliderChapterJump(idx, true)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                            isCurrentCh
+                              ? 'bg-[#557153] text-white shadow-xs'
+                              : 'bg-white/65 hover:bg-white text-stone-700 border border-stone-200/80'
+                          }`}
+                        >
+                          Ch {ch.number}:{' '}
+                          <span className="font-[family-name:var(--font-bengali)]">
+                            {ch.titleBn.split('—')[1]?.trim() || ch.titleBn}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Numbered Interactive Passage Tracklist (Active Row in Signature `#557153` Sage-Olive Bar) */}
+                  <div className="space-y-1.5 max-h-[290px] overflow-y-auto pr-1">
+                    {activeChapter.paragraphsBn.map((paraBn, idx) => {
+                      const isCurrentRow = idx === activeParagraphIdx;
+                      const previewTitleBn =
+                        paraBn.length > 68 ? `${paraBn.slice(0, 68)}...` : paraBn;
+
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setActiveParagraphIdx(idx);
+                            startPlayback(idx, audioLangMode, activeChapterIdx, activeBook);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between gap-3 ${
+                            isCurrentRow
+                              ? 'bg-[#557153] text-white shadow-[0_10px_25px_rgba(85,113,83,0.32)]'
+                              : 'bg-white/40 hover:bg-white/80 text-stone-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <span className="w-5 text-xs font-[family-name:var(--font-mono)] tabular-nums flex items-center justify-center shrink-0">
+                              {isCurrentRow ? (
+                                isPlaying ? (
+                                  <Pause className="w-3.5 h-3.5 fill-white" />
+                                ) : (
+                                  <Play className="w-3.5 h-3.5 fill-white" />
+                                )
+                              ) : (
+                                <span className="text-stone-500">{idx + 1}</span>
+                              )}
+                            </span>
+                            <span
+                              className={`text-xs sm:text-sm font-[family-name:var(--font-bengali)] truncate ${
+                                isCurrentRow ? 'font-semibold text-white' : 'text-stone-800'
+                              }`}
+                            >
+                              {previewTitleBn}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span
+                              className={`text-[10px] font-[family-name:var(--font-mono)] ${
+                                isCurrentRow ? 'text-white/85' : 'text-stone-400'
+                              }`}
+                            >
+                              P 0{idx + 1}
+                            </span>
+                            <MoreHorizontal
+                              className={`w-4 h-4 ${
+                                isCurrentRow ? 'text-white' : 'text-stone-500'
+                              }`}
+                            />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Peeking Right Book Cover (Like KOD cover on the right of reference image) */}
+                <div
+                  onClick={() => selectBook(nextCarouselBook, false, false)}
+                  title={`Next: ${nextCarouselBook.titleBn} (${nextCarouselBook.titleEn})`}
+                  className="hidden xl:block w-28 aspect-[3/4.2] rounded-2xl overflow-hidden shadow-xl border-2 border-white/90 opacity-85 hover:opacity-100 hover:scale-[1.03] transition-all cursor-pointer shrink-0 mt-6"
+                >
+                  <BookCoverArt book={nextCarouselBook} size="sm" />
+                </div>
+              </div>
+
+              {/* BOTTOM-RIGHT FLOATING SAGE-OLIVE GLASS MINI-PLAYER CARD (Exact Match to "Photograph - J Cole" Card in Reference Image) */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                {/* RJ Kebria Voice Model Quick Pill & Sample Button */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleKebriaReferenceSample}
+                    className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      isPlayingKebriaSample
+                        ? 'bg-[#557153] text-white shadow-sm'
+                        : 'bg-white/80 hover:bg-white text-[#557153] border border-[#557153]/30 shadow-2xs'
+                    }`}
+                  >
+                    {isPlayingKebriaSample ? (
+                      <>
+                        <Pause className="w-3.5 h-3.5 fill-white" />
+                        <span>Stop RJ Kebria Ref MP3</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 fill-[#557153]" />
+                        <span>RJ Kebria Voice Ref MP3</span>
+                      </>
+                    )}
+                  </button>
+                  <span className="text-[11px] text-stone-600 font-[family-name:var(--font-bengali)]">
+                    স = শ (&ldquo;Sh&rdquo;) নিখুঁত উচ্চারণ · ধীরস্থির জীবন গল্প ছন্দ
+                  </span>
+                </div>
+
+                {/* Floating Sage-Green Glass Mini-Player Card */}
+                <div className="sage-glass-player rounded-[26px] p-4 sm:p-5 text-white w-full sm:w-[370px] shrink-0">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate font-[family-name:var(--font-bengali)]">
+                        {activeChapter.titleBn.split('—')[1]?.trim() || activeChapter.titleBn}
+                      </p>
+                      <p className="text-xs text-white/80 truncate mt-0.5">
+                        {activeBook.authorBn}
+                      </p>
+                    </div>
+
+                    {/* Movable Scrubber Slider inside Sage Card */}
+                    <div className="w-32 sm:w-36 shrink-0 flex flex-col items-end">
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(0, totalBookPassages - 1)}
+                        step={1}
+                        value={currentGlobalPassageIdx}
+                        aria-label="Movable passage scrubber"
+                        onChange={(e) =>
+                          handleSliderGlobalPassageScrub(Number(e.target.value), true)
+                        }
+                        className="w-full h-1 bg-white/35 rounded-lg appearance-none cursor-pointer accent-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Transport Controls Row inside Sage Card */}
+                  <div className="mt-4 flex items-center justify-between px-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeParagraphIdx > 0) {
+                          const prev = activeParagraphIdx - 1;
+                          setActiveParagraphIdx(prev);
+                          if (isPlaying)
+                            startPlayback(prev, audioLangMode, activeChapterIdx, activeBook);
+                        } else if (activeChapterIdx > 0) {
+                          handleSliderChapterJump(activeChapterIdx - 1, true);
+                        }
+                      }}
+                      className="p-1.5 text-white/85 hover:text-white transition-colors"
+                      aria-label="Previous Track"
+                    >
+                      <SkipBack className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={togglePlayPause}
+                      disabled={isLoadingAudio}
+                      className="p-2 text-white hover:scale-110 transition-transform"
+                      aria-label={isPlaying ? 'Pause' : 'Play'}
+                    >
+                      {isLoadingAudio ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause className="w-4 h-4 fill-white" />
+                      ) : (
+                        <Play className="w-4 h-4 fill-white" />
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeParagraphIdx + 1 < activeChapter.paragraphsBn.length) {
+                          const next = activeParagraphIdx + 1;
+                          setActiveParagraphIdx(next);
+                          if (isPlaying)
+                            startPlayback(next, audioLangMode, activeChapterIdx, activeBook);
+                        } else if (activeChapterIdx + 1 < activeBook.chapters.length) {
+                          handleSliderChapterJump(activeChapterIdx + 1, true);
+                        }
+                      }}
+                      className="p-1.5 text-white/85 hover:text-white transition-colors"
+                      aria-label="Next Track"
+                    >
+                      <SkipForward className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPopupPlayer(true)}
+                      className="p-1.5 text-white/85 hover:text-white transition-colors"
+                      title="Open Fullscreen Queue & Player"
+                      aria-label="Open Queue"
+                    >
+                      <ListMusic className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMuted((m) => {
+                          const next = !m;
+                          if (next) stopAllAudio();
+                          return next;
+                        });
+                      }}
+                      className="p-1.5 text-white/85 hover:text-white transition-colors"
+                      aria-label={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Quick-Select Renowned Bangladeshi & Classic Writers Ribbon */}
-          <div className="mt-5 pt-4 border-t border-white/10">
-            <div className="flex items-center justify-between text-xs text-stone-400 mb-2">
-              <span className="font-semibold text-white">Renowned Writers · বিশিষ্ট লেখকবৃন্দ:</span>
+          <div id="writers-strip" className="mt-7 pt-5 border-t border-stone-200/70 relative z-10">
+            <div className="flex items-center justify-between text-xs text-stone-500 mb-2.5">
+              <span className="font-semibold text-stone-800">
+                Renowned Writers · বিশিষ্ট লেখকবৃন্দ:
+              </span>
               {catalogSearch && (
                 <button
                   type="button"
                   onClick={() => setCatalogSearch('')}
-                  className="text-amber-400 hover:underline text-[11px]"
+                  className="text-[#557153] font-semibold hover:underline text-[11px]"
                 >
                   Show All Books
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {featuredWritersQuickList.map((writer) => {
                 const isSelected = catalogSearch.toLowerCase() === writer.query.toLowerCase();
                 return (
@@ -1412,10 +1858,10 @@ export default function BanglaGranthaApp() {
                         prev.toLowerCase() === writer.query.toLowerCase() ? '' : writer.query
                       );
                     }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
                       isSelected
-                        ? 'bg-amber-400 text-stone-950 font-semibold shadow-[0_0_12px_rgba(245,158,11,0.5)]'
-                        : 'glass-pill text-stone-300 hover:text-white hover:bg-white/10'
+                        ? 'bg-[#557153] text-white font-semibold shadow-xs'
+                        : 'glass-pill text-stone-700 hover:text-stone-950 hover:bg-white/90'
                     }`}
                   >
                     <span className="font-[family-name:var(--font-bengali)]">{writer.labelBn}</span>
@@ -1425,84 +1871,21 @@ export default function BanglaGranthaApp() {
               })}
             </div>
           </div>
-
-          {/* Instant Search Results Dropdown inside Glass Card */}
-          {catalogSearch.trim() !== '' && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center justify-between text-xs text-stone-300 mb-3">
-                <span>
-                  Showing <strong>{filteredBooks.length}</strong> matching book(s) for &ldquo;{catalogSearch}&rdquo;:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCatalogSearch('')}
-                  className="text-amber-400 hover:underline font-medium"
-                >
-                  Clear Search
-                </button>
-              </div>
-
-              {filteredBooks.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-1">
-                  {filteredBooks.map((book) => (
-                    <div
-                      key={book.id}
-                      className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-3 hover:border-amber-400/40 transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white font-[family-name:var(--font-bengali)] truncate">
-                          {book.titleBn}
-                        </p>
-                        <p className="text-xs text-stone-400 truncate">
-                          {book.authorBn} · {book.chapters.length} Ch
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => selectBook(book, false, true)}
-                          className="px-2.5 py-1 text-xs font-medium text-stone-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg whitespace-nowrap"
-                        >
-                          Read
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => selectBook(book, true, false, 'bn')}
-                          className="px-2.5 py-1 text-xs font-medium text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg whitespace-nowrap font-[family-name:var(--font-bengali)] font-semibold"
-                        >
-                          শুনুন
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between gap-2 text-xs text-stone-300">
-                  <span>No local catalog matches. Search connected global repositories:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFederatedQuery(catalogSearch.trim());
-                      document.getElementById('federated-sources')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="px-3 py-1 text-xs font-medium text-stone-950 bg-amber-400 rounded-lg whitespace-nowrap"
-                  >
-                    Search Global Archives
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* RECENTLY PLAYED / জনপ্রিয় গ্রন্থ (Glass Cards Row like in reference image) */}
+        {/* RECENTLY PLAYED / জনপ্রিয় গ্রন্থ (Light Frosted Glass Cards Row) */}
         <section aria-label="Recently Played Audiobooks">
           <div className="flex items-center justify-between mb-3.5 px-1">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight flex items-center gap-2">
               <span>Recently Played</span>
-              <span className="text-xs text-amber-400 font-normal font-[family-name:var(--font-bengali)]">(সম্প্রতি পঠিত ও শ্রুত)</span>
+              <span className="text-xs text-[#557153] font-normal font-[family-name:var(--font-bengali)]">
+                (সম্প্রতি পঠিত ও শ্রুত)
+              </span>
             </h2>
-            <a href="#catalog" className="text-xs text-stone-400 hover:text-amber-300 transition-colors">
+            <a
+              href="#catalog"
+              className="text-xs text-stone-600 hover:text-[#557153] font-medium transition-colors"
+            >
               See All ({books.length})
             </a>
           </div>
@@ -1514,11 +1897,11 @@ export default function BanglaGranthaApp() {
                 <div
                   key={book.id}
                   onClick={() => selectBook(book, true, false, 'bn')}
-                  className={`p-3.5 rounded-2xl glass-panel glass-panel-hover flex flex-col justify-between group cursor-pointer relative overflow-hidden ${
-                    isCurrent ? 'border-amber-400/50 shadow-[0_0_25px_rgba(245,158,11,0.2)]' : ''
+                  className={`p-3.5 rounded-3xl glass-panel glass-panel-hover flex flex-col justify-between group cursor-pointer relative overflow-hidden ${
+                    isCurrent ? 'ring-2 ring-[#557153] bg-white/85' : ''
                   }`}
                 >
-                  <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-lg relative border border-white/10">
+                  <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-md relative border border-white/90">
                     <BookCoverArt
                       motif={book.coverMotif}
                       palette={book.palette}
@@ -1527,132 +1910,35 @@ export default function BanglaGranthaApp() {
                       authorBn={book.authorBn}
                       authorEn={book.authorEn}
                     />
-                    {/* Hover Overlay with Big Play Button */}
-                    <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="p-3.5 rounded-full bg-amber-400 text-stone-950 shadow-[0_0_20px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-transform">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="p-3.5 rounded-full bg-[#557153] text-white shadow-lg group-hover:scale-110 transition-transform">
                         {isCurrent && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-stone-950" />
+                          <Pause className="w-5 h-5 fill-white" />
                         ) : (
-                          <Play className="w-5 h-5 fill-stone-950 ml-0.5" />
+                          <Play className="w-5 h-5 fill-white ml-0.5" />
                         )}
                       </span>
                     </div>
                   </div>
 
                   <div className="mt-3">
-                    <p className="text-xs sm:text-sm font-semibold text-white truncate font-[family-name:var(--font-bengali)] group-hover:text-amber-300 transition-colors">
+                    <p className="text-xs sm:text-sm font-bold text-stone-900 truncate font-[family-name:var(--font-bengali)] group-hover:text-[#557153] transition-colors">
                       {book.titleBn}
                     </p>
-                    <p className="text-[11px] text-stone-400 truncate mt-0.5">
-                      {book.authorBn}
-                    </p>
+                    <p className="text-[11px] text-stone-500 truncate mt-0.5">{book.authorBn}</p>
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-stone-400 font-[family-name:var(--font-mono)]">
+                  <div className="mt-2 pt-2 border-t border-stone-200/70 flex items-center justify-between text-[10px] text-stone-500 font-[family-name:var(--font-mono)]">
                     <span>{book.chapters.length} Ch</span>
-                    <span className="text-amber-400">{book.totalDurationFormatted}</span>
+                    <span className="text-[#557153] font-semibold">
+                      {book.totalDurationFormatted}
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
         </section>
-
-        {/* CURATED LITERARY PLAYLISTS / নির্বাচিত সংকলন (Themed Glass Cards) */}
-        <section aria-label="Curated Literary Series">
-          <div className="flex items-center justify-between mb-3.5 px-1">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <span>Featured Playlists</span>
-              <span className="text-xs text-sky-400 font-normal font-[family-name:var(--font-bengali)]">(নির্বাচিত গ্রন্থ সংকলন)</span>
-            </h2>
-            <span className="text-xs text-stone-400">Curated Series</span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              {
-                title: 'হিমু সমগ্র',
-                subtitle: 'Humayun Ahmed',
-                gradient: 'from-amber-600/30 via-orange-600/20 to-black/40',
-                query: 'Humayun Ahmed',
-                tag: 'কালজয়ী চরিত্র',
-              },
-              {
-                title: 'Friday Classics',
-                subtitle: 'Satyajit Ray',
-                gradient: 'from-sky-600/30 via-blue-600/20 to-black/40',
-                query: 'Satyajit Ray',
-                tag: 'রহস্য ও রোমাঞ্চ',
-              },
-              {
-                title: 'মুক্তিযুদ্ধ ও ইতিহাস',
-                subtitle: 'Historical Epics',
-                gradient: 'from-emerald-600/30 via-teal-600/20 to-black/40',
-                query: 'Lalsalu',
-                tag: 'ঐতিহাসিক দলিল',
-              },
-              {
-                title: 'কাব্য ও রূপকথা',
-                subtitle: 'Poetry & Lore',
-                gradient: 'from-purple-600/30 via-fuchsia-600/20 to-black/40',
-                query: 'Joshim Uddin',
-                tag: 'পল্লীগাথা',
-              },
-            ].map((playlist, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setCatalogSearch(playlist.query);
-                  document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className={`p-4 rounded-2xl glass-panel glass-panel-hover bg-gradient-to-br ${playlist.gradient} border border-white/10 cursor-pointer flex flex-col justify-between h-36 group`}
-              >
-                <div>
-                  <span className="text-[10px] uppercase font-semibold text-amber-300 font-[family-name:var(--font-mono)]">
-                    {playlist.tag}
-                  </span>
-                  <h3 className="mt-1 text-sm sm:text-base font-bold text-white font-[family-name:var(--font-bengali)] group-hover:text-amber-300 transition-colors">
-                    {playlist.title}
-                  </h3>
-                  <p className="text-[11px] text-stone-300">{playlist.subtitle}</p>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-white/90">
-                  <span className="text-stone-300">Explore Collection</span>
-                  <Play className="w-3.5 h-3.5 fill-white group-hover:scale-110 transition-transform" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* METRICS & QUICK CAPABILITIES STRIP */}
-        <div className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-stone-300">
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-white font-[family-name:var(--font-display)] tabular-nums">
-              148,100+
-            </p>
-            <p className="text-[11px] text-stone-400 mt-0.5">Indexed Bengali Monographs</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-amber-400 font-[family-name:var(--font-display)]">
-              বাংলা + English
-            </p>
-            <p className="text-[11px] text-stone-400 mt-0.5">Unabridged Continuous Audio</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-sky-400 font-[family-name:var(--font-display)]">
-              AI4Bharat Indic-TTS
-            </p>
-            <p className="text-[11px] text-stone-400 mt-0.5">Authentic Male Voice Artist</p>
-          </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-emerald-400 font-[family-name:var(--font-display)]">
-              Offline &amp; PWA
-            </p>
-            <p className="text-[11px] text-stone-400 mt-0.5">Cross-Platform Web App</p>
-          </div>
-        </div>
       </div>
 
       {/* OPTIONAL CUSTOM DIGITIZATION DRAWER */}
@@ -1770,11 +2056,11 @@ export default function BanglaGranthaApp() {
       )}
 
       {/* SECTION 1: GENRE-CLASSIFIED BENGALI LITERARY CATALOG */}
-      <section id="catalog" className="px-6 lg:px-12 py-12 border-b border-stone-200">
+      <section id="catalog" className="px-6 lg:px-12 py-12 border-b border-white/80">
         <div className="max-w-[1320px] mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-stone-200">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-stone-200/80">
             <div>
-              <p className="text-xs uppercase tracking-widest text-stone-500">
+              <p className="text-xs uppercase tracking-widest text-[#557153] font-semibold">
                 01 · Unabridged Literary Archive by Genre
               </p>
               <h2 className="mt-1 text-3xl font-[family-name:var(--font-display)] font-semibold text-stone-900">
@@ -1790,13 +2076,13 @@ export default function BanglaGranthaApp() {
                 value={catalogSearch}
                 onChange={(e) => setCatalogSearch(e.target.value)}
                 placeholder="Search title, রবীন্দ্রনাথ, Feluda, 1929..."
-                className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-stone-300 rounded-lg text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#9A3412]"
+                className="w-full pl-9 pr-4 py-2 text-xs bg-white/75 backdrop-blur-md border border-white/90 rounded-full text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-[#557153] shadow-2xs"
               />
             </div>
           </div>
 
           {/* Interactive Genre Filter Bar */}
-          <div className="mt-6 flex items-center gap-1.5 p-1.5 bg-[#EBE6DF] rounded-xl overflow-x-auto">
+          <div className="mt-6 flex items-center gap-2 p-2 glass-panel-subtle rounded-2xl overflow-x-auto">
             {GENRE_CATEGORIES.map((genre) => {
               const active = selectedGenre === genre.id;
               return (
@@ -1804,10 +2090,10 @@ export default function BanglaGranthaApp() {
                   key={genre.id}
                   type="button"
                   onClick={() => setSelectedGenre(genre.id)}
-                  className={`px-3.5 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+                  className={`px-4 py-2 text-xs font-medium rounded-xl transition-all whitespace-nowrap shrink-0 ${
                     active
-                      ? 'bg-[#FBF9F5] text-stone-900 shadow-xs'
-                      : 'text-stone-600 hover:text-stone-900'
+                      ? 'bg-[#557153] text-white shadow-sm'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
                   }`}
                 >
                   <span className="font-[family-name:var(--font-bengali)] mr-1.5">
@@ -1832,10 +2118,10 @@ export default function BanglaGranthaApp() {
               return (
                 <article
                   key={book.id}
-                  className={`group rounded-xl border transition-transform duration-150 hover:-translate-y-0.5 flex flex-col justify-between p-5 ${
+                  className={`group rounded-3xl glass-panel glass-panel-hover flex flex-col justify-between p-5 ${
                     isCurrentBook
-                      ? 'bg-[#F3EFE6] border-[#9A3412]/60'
-                      : 'bg-[#F7F4EE] border-stone-200/90 hover:border-stone-300'
+                      ? 'ring-2 ring-[#557153] bg-white/85'
+                      : ''
                   }`}
                 >
                   <div>
@@ -1843,7 +2129,7 @@ export default function BanglaGranthaApp() {
                     <div className="grid grid-cols-12 gap-4 items-start">
                       <div
                         onClick={() => selectBook(book, false, true)}
-                        className="col-span-4 aspect-[3/4] rounded-lg overflow-hidden border border-stone-300 cursor-pointer"
+                        className="col-span-4 aspect-[3/4] rounded-2xl overflow-hidden border border-white/90 shadow-md cursor-pointer"
                       >
                         <BookCoverArt book={book} size="sm" />
                       </div>
@@ -1851,7 +2137,7 @@ export default function BanglaGranthaApp() {
                       <div className="col-span-8 flex flex-col">
                         {/* Clean Unboxed Metadata */}
                         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-stone-500">
-                          <span>{book.genreLabelBn}</span>
+                          <span className="text-[#557153] font-medium">{book.genreLabelBn}</span>
                           <span aria-hidden="true">·</span>
                           <span className="font-[family-name:var(--font-mono)] tabular-nums">
                             {book.chapters.length} Chapters
@@ -1864,17 +2150,17 @@ export default function BanglaGranthaApp() {
 
                         <h3
                           onClick={() => selectBook(book, false, true)}
-                          className="mt-1.5 text-lg font-[family-name:var(--font-bengali)] font-bold text-stone-900 group-hover:text-[#9A3412] transition-colors cursor-pointer line-clamp-1"
+                          className="mt-1.5 text-lg font-[family-name:var(--font-bengali)] font-bold text-stone-900 group-hover:text-[#557153] transition-colors cursor-pointer line-clamp-1"
                         >
                           {book.titleBn}
                         </h3>
-                        <p className="text-xs font-[family-name:var(--font-display)] italic text-stone-700 line-clamp-1">
+                        <p className="text-xs font-[family-name:var(--font-display)] italic text-stone-600 line-clamp-1">
                           {book.titleEn}
                         </p>
 
                         <p className="mt-1 text-xs font-medium text-stone-800 font-[family-name:var(--font-bengali)]">
                           {book.authorBn} ·{' '}
-                          <span className="font-normal text-stone-600">{book.authorEn}</span>
+                          <span className="font-normal text-stone-500">{book.authorEn}</span>
                         </p>
 
                         <p className="mt-2.5 text-xs text-stone-600 line-clamp-3 leading-relaxed">
@@ -1884,7 +2170,7 @@ export default function BanglaGranthaApp() {
                     </div>
 
                     {/* Full Book Audio Scope Line */}
-                    <div className="mt-4 pt-3 border-t border-stone-200/80 flex items-center justify-between gap-2 text-[11px] text-stone-500">
+                    <div className="mt-4 pt-3 border-t border-stone-200/70 flex items-center justify-between gap-2 text-[11px] text-stone-500">
                       <span className="truncate">
                         Unabridged Audio: All {book.chapters.length} Chapters (বাংলা &amp; EN)
                       </span>
@@ -1892,10 +2178,10 @@ export default function BanglaGranthaApp() {
                         type="button"
                         onClick={() => toggleBookmark(book.id)}
                         aria-label="Bookmark volume"
-                        className="text-stone-500 hover:text-[#9A3412] transition-colors shrink-0"
+                        className="text-stone-500 hover:text-[#557153] transition-colors shrink-0"
                       >
                         {isBookmarked ? (
-                          <BookmarkCheck className="w-4 h-4 text-[#9A3412]" />
+                          <BookmarkCheck className="w-4 h-4 text-[#557153]" />
                         ) : (
                           <Bookmark className="w-4 h-4" />
                         )}
@@ -1904,11 +2190,11 @@ export default function BanglaGranthaApp() {
                   </div>
 
                   {/* Action Controls: Read + Full Bengali Audio + Full English Audio */}
-                  <div className="mt-4 pt-3 border-t border-stone-200 grid grid-cols-3 gap-2">
+                  <div className="mt-4 pt-3 border-t border-stone-200/70 grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => selectBook(book, false, true)}
-                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium text-stone-800 bg-[#FBF9F5] border border-stone-300 hover:bg-stone-100 rounded-lg transition-colors whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium text-stone-800 bg-white/80 border border-stone-200 hover:bg-white rounded-xl transition-colors whitespace-nowrap"
                     >
                       <BookOpen className="w-3.5 h-3.5 shrink-0" />
                       <span>All Chapters</span>
@@ -1917,7 +2203,7 @@ export default function BanglaGranthaApp() {
                     <button
                       type="button"
                       onClick={() => selectBook(book, true, true, 'bn')}
-                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium text-white bg-[#9A3412] hover:bg-[#7C2D12] rounded-lg transition-colors whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-semibold text-white bg-[#557153] hover:bg-[#465E44] rounded-xl transition-colors whitespace-nowrap shadow-xs"
                     >
                       <Headphones className="w-3.5 h-3.5 shrink-0" />
                       <span className="font-[family-name:var(--font-bengali)]">বাংলা অডিও</span>
@@ -1926,7 +2212,7 @@ export default function BanglaGranthaApp() {
                     <button
                       type="button"
                       onClick={() => selectBook(book, true, true, 'en')}
-                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-lg transition-colors whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-1 px-2.5 py-2 text-xs font-medium text-white bg-stone-800 hover:bg-stone-900 rounded-xl transition-colors whitespace-nowrap"
                     >
                       <Headphones className="w-3.5 h-3.5 shrink-0" />
                       <span>EN Audio</span>
@@ -1943,13 +2229,13 @@ export default function BanglaGranthaApp() {
       <section
         id="reader-studio"
         ref={readerSectionRef}
-        className="px-6 lg:px-12 py-14 border-b border-stone-200"
+        className="px-6 lg:px-12 py-14 border-b border-white/80"
       >
         <div className="max-w-[1320px] mx-auto">
           {/* Reader Header & Controls Bar */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-stone-200/80">
             <div>
-              <p className="text-xs uppercase tracking-widest text-[#9A3412] font-semibold">
+              <p className="text-xs uppercase tracking-widest text-[#557153] font-semibold">
                 02 · Unabridged Full-Book Reader &amp; Continuous Audiobook Studio
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-3">
@@ -1965,13 +2251,13 @@ export default function BanglaGranthaApp() {
             {/* Interactive Script Mode, Theme, Share & Offline Export Controls */}
             <div className="flex flex-wrap items-center gap-2.5">
               {/* Script Selector */}
-              <div className="flex items-center gap-1 p-1 bg-[#EBE6DF] rounded-lg">
+              <div className="flex items-center gap-1 p-1 glass-panel-subtle rounded-xl">
                 <button
                   type="button"
                   onClick={() => setScriptMode('bilingual')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                     scriptMode === 'bilingual'
-                      ? 'bg-[#FBF9F5] text-stone-900 shadow-xs'
+                      ? 'bg-[#557153] text-white shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -1980,9 +2266,9 @@ export default function BanglaGranthaApp() {
                 <button
                   type="button"
                   onClick={() => setScriptMode('bn')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)] ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)] ${
                     scriptMode === 'bn'
-                      ? 'bg-[#FBF9F5] text-stone-900 shadow-xs'
+                      ? 'bg-[#557153] text-white shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -1991,9 +2277,9 @@ export default function BanglaGranthaApp() {
                 <button
                   type="button"
                   onClick={() => setScriptMode('en')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                     scriptMode === 'en'
-                      ? 'bg-[#FBF9F5] text-stone-900 shadow-xs'
+                      ? 'bg-[#557153] text-white shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -2002,13 +2288,13 @@ export default function BanglaGranthaApp() {
               </div>
 
               {/* Paper Theme Selector */}
-              <div className="flex items-center gap-1 p-1 bg-[#EBE6DF] rounded-lg">
+              <div className="flex items-center gap-1 p-1 glass-panel-subtle rounded-xl">
                 <button
                   type="button"
                   onClick={() => setPaperTheme('alabaster')}
-                  className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                     paperTheme === 'alabaster'
-                      ? 'bg-[#FBF9F5] text-stone-900 shadow-xs'
+                      ? 'bg-[#557153] text-white shadow-xs'
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -3121,13 +3407,13 @@ export default function BanglaGranthaApp() {
         </div>
       </footer>
 
-      {/* PERSISTENT CROSS-DEVICE BOTTOM BILINGUAL FULL-BOOK AUDIOBOOK PLAYER BAR */}
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-[#1C1917] text-[#FBF9F5] border-t border-stone-800 px-4 sm:px-8 py-2.5 shadow-lg">
+      {/* PERSISTENT LIGHT FROSTED GLASS & SAGE-OLIVE BOTTOM AUDIOBOOK PLAYER BAR */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-white/80 backdrop-blur-2xl text-stone-900 border-t border-white/95 px-4 sm:px-8 py-2.5 shadow-[0_-10px_35px_rgba(24,29,26,0.08)]">
         <div className="max-w-[1320px] mx-auto space-y-2">
           {/* Movable MP3 Chapter & Timeline Scrubber Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-1 border-b border-stone-800/90">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pb-1 border-b border-stone-200/80">
             <div className="flex items-center gap-2 flex-1">
-              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-amber-400 whitespace-nowrap">
+              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-[#557153] font-semibold whitespace-nowrap">
                 Ch {activeChapter.number}/{activeBook.chapters.length}
               </span>
               <input
@@ -3138,17 +3424,17 @@ export default function BanglaGranthaApp() {
                 value={currentGlobalPassageIdx}
                 aria-label="Movable MP3 player slider to skip chapters and passages"
                 onChange={(e) => handleSliderGlobalPassageScrub(Number(e.target.value), true)}
-                className="w-full h-2 bg-stone-700 rounded-lg appearance-none cursor-pointer accent-[#EA580C]"
+                className="w-full h-1.5 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-[#557153]"
               />
-              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-400 whitespace-nowrap">
+              <span className="text-[11px] font-[family-name:var(--font-mono)] tabular-nums text-stone-500 whitespace-nowrap">
                 P {activeParagraphIdx + 1}/{activeChapter.paragraphsBn.length} (
                 {currentGlobalPassageIdx + 1}/{totalBookPassages})
               </span>
             </div>
 
-            {/* Direct Movable Chapter-to-Chapter Selector Pills + Slider */}
+            {/* Direct Movable Chapter-to-Chapter Selector Pills */}
             <div className="flex items-center gap-1 overflow-x-auto">
-              <span className="text-[10px] uppercase tracking-wider text-stone-400 whitespace-nowrap mr-1">
+              <span className="text-[10px] uppercase tracking-wider text-stone-500 whitespace-nowrap mr-1">
                 Skip Chapter:
               </span>
               {activeBook.chapters.map((ch, idx) => (
@@ -3156,10 +3442,10 @@ export default function BanglaGranthaApp() {
                   key={ch.id}
                   type="button"
                   onClick={() => handleSliderChapterJump(idx, true)}
-                  className={`px-2 py-0.5 text-[11px] font-[family-name:var(--font-mono)] rounded transition-colors whitespace-nowrap ${
+                  className={`px-2.5 py-0.5 text-[11px] font-[family-name:var(--font-mono)] rounded-full transition-colors whitespace-nowrap ${
                     idx === activeChapterIdx
-                      ? 'bg-[#9A3412] text-white font-semibold'
-                      : 'bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white'
+                      ? 'bg-[#557153] text-white font-semibold shadow-2xs'
+                      : 'bg-stone-200/75 text-stone-700 hover:bg-stone-300/80 hover:text-stone-950'
                   }`}
                 >
                   Ch {ch.number}
@@ -3174,22 +3460,22 @@ export default function BanglaGranthaApp() {
               <button
                 type="button"
                 onClick={togglePlayPause}
-                className="w-10 h-10 rounded-lg bg-[#9A3412] hover:bg-[#7C2D12] text-white flex items-center justify-center transition-colors shrink-0"
+                className="w-10 h-10 rounded-2xl bg-[#557153] hover:bg-[#435B41] text-white flex items-center justify-center transition-colors shrink-0 shadow-[0_6px_16px_rgba(85,113,83,0.35)]"
                 aria-label={isPlaying ? 'Pause audiobook' : 'Play audiobook'}
               >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
               </button>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-[family-name:var(--font-bengali)] font-semibold truncate">
+                  <p className="text-sm font-[family-name:var(--font-bengali)] font-bold text-stone-900 truncate">
                     {activeBook.titleBn}
                   </p>
-                  <span className="hidden sm:inline text-xs text-stone-400 truncate">
+                  <span className="hidden sm:inline text-xs text-stone-500 truncate">
                     · Ch {activeChapter.number}/{activeBook.chapters.length}:{' '}
                     {activeChapter.titleEn}
                   </span>
                 </div>
-                <p className="text-[11px] text-stone-400 truncate font-[family-name:var(--font-bengali)]">
+                <p className="text-[11px] text-stone-500 truncate font-[family-name:var(--font-bengali)]">
                   {engineNotice}
                 </p>
               </div>
@@ -3201,7 +3487,7 @@ export default function BanglaGranthaApp() {
                 type="button"
                 disabled={activeChapterIdx === 0}
                 onClick={() => handleSliderChapterJump(activeChapterIdx - 1, true)}
-                className="px-2 py-1 text-[11px] font-medium bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded transition-colors whitespace-nowrap"
+                className="px-2.5 py-1 text-[11px] font-medium bg-stone-200/80 hover:bg-stone-300 disabled:opacity-40 text-stone-800 rounded-full transition-colors whitespace-nowrap"
                 title="Previous Chapter"
               >
                 « Prev Ch
@@ -3223,13 +3509,13 @@ export default function BanglaGranthaApp() {
                     if (isPlaying) startPlayback(lastPara, audioLangMode, prevCh, activeBook);
                   }
                 }}
-                className="p-1.5 text-stone-300 hover:text-white transition-colors"
+                className="p-1.5 text-stone-600 hover:text-stone-950 transition-colors"
                 aria-label="Previous passage or chapter"
               >
                 <SkipBack className="w-4 h-4" />
               </button>
 
-              <span className="text-xs font-[family-name:var(--font-mono)] tabular-nums text-stone-300">
+              <span className="text-xs font-[family-name:var(--font-mono)] tabular-nums text-stone-600">
                 Ch {activeChapter.number}/{activeBook.chapters.length} · P {activeParagraphIdx + 1}/
                 {activeChapter.paragraphsBn.length}
               </span>
@@ -3249,7 +3535,7 @@ export default function BanglaGranthaApp() {
                     if (isPlaying) startPlayback(0, audioLangMode, nextCh, activeBook);
                   }
                 }}
-                className="p-1.5 text-stone-300 hover:text-white transition-colors"
+                className="p-1.5 text-stone-600 hover:text-stone-950 transition-colors"
                 aria-label="Next passage or chapter"
               >
                 <SkipForward className="w-4 h-4" />
@@ -3259,88 +3545,88 @@ export default function BanglaGranthaApp() {
                 type="button"
                 disabled={activeChapterIdx + 1 >= activeBook.chapters.length}
                 onClick={() => handleSliderChapterJump(activeChapterIdx + 1, true)}
-                className="px-2 py-1 text-[11px] font-medium bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded transition-colors whitespace-nowrap"
+                className="px-2.5 py-1 text-[11px] font-medium bg-stone-200/80 hover:bg-stone-300 disabled:opacity-40 text-stone-800 rounded-full transition-colors whitespace-nowrap"
                 title="Next Chapter"
               >
                 Next Ch »
               </button>
             </div>
 
-          {/* Right Audio Language Switcher (বাংলা / EN / বাংলা+EN), Speed & Mute */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center bg-stone-800 p-0.5 rounded-lg border border-stone-700">
+            {/* Right Audio Language Switcher (বাংলা / EN / বাংলা+EN), Speed & Mute */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center bg-stone-200/75 p-0.5 rounded-full border border-white/80">
+                <button
+                  type="button"
+                  onClick={() => handleSelectAudioLanguage('bn', true)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)] ${
+                    audioLangMode === 'bn'
+                      ? 'bg-[#557153] text-white'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  বাংলা অডিও
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectAudioLanguage('en', true)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap ${
+                    audioLangMode === 'en'
+                      ? 'bg-[#557153] text-white'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  EN Audio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectAudioLanguage('bilingual', true)}
+                  className={`hidden sm:inline-block px-2.5 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap ${
+                    audioLangMode === 'bilingual'
+                      ? 'bg-[#557153] text-white'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  বাংলা+EN
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => handleSelectAudioLanguage('bn', true)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)] ${
-                  audioLangMode === 'bn'
-                    ? 'bg-[#9A3412] text-white'
-                    : 'text-stone-300 hover:text-white'
-                }`}
+                onClick={() => {
+                  const speeds = [0.75, 0.85, 0.92, 1.0, 1.15];
+                  const nextSpeed = speeds[(speeds.indexOf(playbackSpeed) + 1) % speeds.length];
+                  setPlaybackSpeed(nextSpeed);
+                }}
+                className="hidden sm:inline-block px-2.5 py-1 text-xs font-[family-name:var(--font-mono)] tabular-nums bg-stone-200/80 hover:bg-stone-300 text-stone-800 rounded-full transition-colors whitespace-nowrap"
               >
-                বাংলা অডিও
+                {playbackSpeed}x
               </button>
+
               <button
                 type="button"
-                onClick={() => handleSelectAudioLanguage('en', true)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                  audioLangMode === 'en'
-                    ? 'bg-stone-100 text-stone-900'
-                    : 'text-stone-300 hover:text-white'
-                }`}
+                onClick={() => {
+                  setIsMuted((m) => {
+                    const next = !m;
+                    if (next) stopAllAudio();
+                    return next;
+                  });
+                }}
+                className="p-2 text-stone-600 hover:text-stone-950 bg-stone-200/80 rounded-full transition-colors"
+                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
               >
-                EN Audio
+                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
+
               <button
                 type="button"
-                onClick={() => handleSelectAudioLanguage('bilingual', true)}
-                className={`hidden sm:inline-block px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                  audioLangMode === 'bilingual'
-                    ? 'bg-[#1E3A8A] text-white'
-                    : 'text-stone-300 hover:text-white'
-                }`}
+                onClick={() => setShowPopupPlayer(true)}
+                className="p-2 text-white bg-[#557153] hover:bg-[#435B41] rounded-full transition-colors"
+                title="Expand Fullscreen Audio Player"
+                aria-label="Expand Fullscreen Audio Player"
               >
-                বাংলা+EN
+                <Maximize2 className="w-4 h-4" />
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const speeds = [0.85, 1.0, 1.25, 1.5];
-                const nextSpeed = speeds[(speeds.indexOf(playbackSpeed) + 1) % speeds.length];
-                setPlaybackSpeed(nextSpeed);
-              }}
-              className="hidden sm:inline-block px-2.5 py-1 text-xs font-[family-name:var(--font-mono)] tabular-nums bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md transition-colors whitespace-nowrap"
-            >
-              {playbackSpeed}x
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsMuted((m) => {
-                  const next = !m;
-                  if (next) stopAllAudio();
-                  return next;
-                });
-              }}
-              className="p-2 text-stone-300 hover:text-white bg-stone-800 rounded-md transition-colors"
-              aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowPopupPlayer(true)}
-              className="p-2 text-amber-400 hover:text-white bg-stone-800 hover:bg-stone-700 rounded-md transition-colors"
-              title="Expand Fullscreen Spotify Audio Player"
-              aria-label="Expand Fullscreen Spotify Audio Player"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-          </div>
           </div>
         </div>
       </div>
