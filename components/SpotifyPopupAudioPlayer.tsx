@@ -23,6 +23,7 @@ import { BengaliBook, BookChapter } from '@/lib/bengali-catalog';
 import { BookCoverArt } from '@/components/BookCoverArt';
 import { DirectedNarrationSegment } from '@/lib/bengali-narration-director';
 import { SpotifySoundwaveVisualizer } from '@/components/SpotifySoundwaveVisualizer';
+import { MaleNarratorPersona } from '@/lib/baritone-audio-engine';
 
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
 
@@ -57,6 +58,10 @@ interface SpotifyPopupAudioPlayerProps {
   onSelectChapter: (chIdx: number) => void;
   totalBookPassages: number;
   currentGlobalPassageIdx: number;
+  narratorPersona?: MaleNarratorPersona;
+  onSelectNarratorPersona?: (persona: MaleNarratorPersona) => void;
+  isPlayingKebriaSample?: boolean;
+  onToggleKebriaSample?: () => void;
 }
 
 export function SpotifyPopupAudioPlayer({
@@ -90,6 +95,10 @@ export function SpotifyPopupAudioPlayer({
   onSelectChapter,
   totalBookPassages,
   currentGlobalPassageIdx,
+  narratorPersona = 'deep-baritone',
+  onSelectNarratorPersona,
+  isPlayingKebriaSample = false,
+  onToggleKebriaSample,
 }: SpotifyPopupAudioPlayerProps) {
   const [activeTab, setActiveTab] = useState<'reader' | 'director' | 'queue'>('reader');
 
@@ -296,27 +305,88 @@ export function SpotifyPopupAudioPlayer({
               </button>
             </div>
 
-            {/* Speed & Narration Engine Badge */}
-            <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-              <div className="flex items-center gap-1 font-[family-name:var(--font-mono)]">
-                {[0.85, 1.0, 1.25, 1.5].map((spd) => (
+            {/* Speed & RJ Kebria Voice Model Controls */}
+            <div className="space-y-2.5 pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1 font-[family-name:var(--font-mono)]">
+                  {[0.85, 1.0, 1.25, 1.5].map((spd) => (
+                    <button
+                      key={spd}
+                      type="button"
+                      onClick={() => onSetPlaybackSpeed(spd)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                        playbackSpeed === spd
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'text-stone-400 hover:text-white'
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+                {onToggleKebriaSample && (
                   <button
-                    key={spd}
                     type="button"
-                    onClick={() => onSetPlaybackSpeed(spd)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                      playbackSpeed === spd
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                        : 'text-stone-400 hover:text-white'
+                    onClick={onToggleKebriaSample}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                      isPlayingKebriaSample
+                        ? 'bg-emerald-500 text-stone-950 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                        : 'bg-white/10 hover:bg-white/15 text-amber-300 border border-amber-500/30'
                     }`}
                   >
-                    {spd}x
+                    {isPlayingKebriaSample ? (
+                      <>
+                        <Pause className="w-2.5 h-2.5 fill-stone-950" />
+                        <span>Stop Reference MP3</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-2.5 h-2.5 fill-amber-300" />
+                        <span>RJ Kebria Ref MP3</span>
+                      </>
+                    )}
                   </button>
-                ))}
+                )}
               </div>
-              <span className="text-[10px] text-amber-300/80 font-medium font-[family-name:var(--font-bengali)] truncate max-w-[200px]">
-                AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠ
-              </span>
+
+              {/* RJ Kebria Voice Model Tone Selector */}
+              {onSelectNarratorPersona && (
+                <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => onSelectNarratorPersona('deep-baritone')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                      narratorPersona === 'deep-baritone'
+                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                        : 'text-stone-300 hover:text-white'
+                    }`}
+                  >
+                    কিবরিয়া · জীবন গল্প
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectNarratorPersona('resonant-bass')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                      narratorPersona === 'resonant-bass'
+                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                        : 'text-stone-300 hover:text-white'
+                    }`}
+                  >
+                    রাতের রেডিও (FM)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectNarratorPersona('warm-storyteller')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                      narratorPersona === 'warm-storyteller'
+                        ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                        : 'text-stone-300 hover:text-white'
+                    }`}
+                  >
+                    সাহিত্য পাঠ
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

@@ -105,6 +105,9 @@ export function buildLiteraryStorytellingSSML(options: {
   text: string;
   voiceName: string;
   locale: string;
+  pitch?: string;
+  rate?: string;
+  volume?: string;
 }): string {
   return buildDirectedBanglaSSML(options).ssml;
 }
@@ -114,6 +117,9 @@ async function openAndSynthesizeStream(
     text: string;
     voiceName: string;
     locale: string;
+    pitch?: string;
+    rate?: string;
+    volume?: string;
   },
   retryOnClockSkew = true
 ): Promise<Buffer> {
@@ -281,9 +287,10 @@ export async function synthesizeNativeNeuralMp3(options: {
   locale: string;
   rate?: string;
   pitch?: string;
+  volume?: string;
   isPoetic?: boolean;
 }): Promise<Buffer> {
-  const { text, voiceName, locale } = options;
+  const { text, voiceName, locale, rate = '-5%', pitch = '-4Hz', volume = '+5%' } = options;
   const trimmed = text.replace(/\s+/g, ' ').trim();
 
   if (trimmed.length <= 1200) {
@@ -291,6 +298,9 @@ export async function synthesizeNativeNeuralMp3(options: {
       text: trimmed,
       voiceName,
       locale,
+      rate,
+      pitch,
+      volume,
     });
   }
 
@@ -320,6 +330,9 @@ export async function synthesizeNativeNeuralMp3(options: {
       text: group,
       voiceName,
       locale,
+      rate,
+      pitch,
+      volume,
     });
     buffers.push(buf);
   }

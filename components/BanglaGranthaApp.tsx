@@ -51,6 +51,7 @@ import {
 } from '@/lib/bengali-narration-director';
 import { SpotifySoundwaveVisualizer } from '@/components/SpotifySoundwaveVisualizer';
 import { SpotifyPopupAudioPlayer } from '@/components/SpotifyPopupAudioPlayer';
+import { RJ_KEBRIA_REFERENCE_AUDIO_PATH } from '@/lib/rj-kebria-voice-model';
 
 type ReadingScriptMode = 'bilingual' | 'bn' | 'en';
 type AudioLanguageMode = 'bn' | 'en' | 'bilingual';
@@ -92,12 +93,13 @@ export default function BanglaGranthaApp() {
   const [isLoadingAudio, setIsLoadingAudio] = useState<boolean>(false);
   const [isExpandingChapters, setIsExpandingChapters] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [narratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
+  const [narratorPersona, setNarratorPersona] = useState<MaleNarratorPersona>('deep-baritone');
+  const [isPlayingKebriaSample, setIsPlayingKebriaSample] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [ambientTanpura, setAmbientTanpura] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [engineNotice, setEngineNotice] = useState<string>(
-    'গল্প পাঠে: অগ্নি (শ্রুতি-গল্প কথক) · Storyteller Voice: Agni (Friday Classics Style)'
+    'কণ্ঠ মডেল: আরজে কিবরিয়া · জীবন গল্প (RJ Kebria Replicated Voice Model · 108Hz Studio Baritone)'
   );
 
   // Federated E-Book Source Search State
@@ -118,6 +120,7 @@ export default function BanglaGranthaApp() {
 
   // Audio Refs
   const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
+  const kebriaSampleAudioRef = useRef<HTMLAudioElement | null>(null);
   const baritoneControllerRef = useRef<{ stop: () => void } | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const tanpuraGainRef = useRef<GainNode | null>(null);
@@ -309,6 +312,13 @@ export default function BanglaGranthaApp() {
       htmlAudioRef.current.currentTime = 0;
       htmlAudioRef.current = null;
     }
+    if (kebriaSampleAudioRef.current) {
+      kebriaSampleAudioRef.current.onended = null;
+      kebriaSampleAudioRef.current.onerror = null;
+      kebriaSampleAudioRef.current.pause();
+      kebriaSampleAudioRef.current = null;
+      setIsPlayingKebriaSample(false);
+    }
     if (tanpuraGainRef.current && audioCtxRef.current) {
       try {
         tanpuraGainRef.current.gain.setTargetAtTime(0.0001, audioCtxRef.current.currentTime, 0.15);
@@ -322,6 +332,46 @@ export default function BanglaGranthaApp() {
     }
     setIsLoadingAudio(false);
   }, []);
+
+  // Toggle RJ Kebria Reference MP3 Sample (/assets/aistudio/Voice_Model___RJ_Kebria__d6ddbc00.mp3)
+  const toggleKebriaReferenceSample = useCallback(() => {
+    if (isPlayingKebriaSample && kebriaSampleAudioRef.current) {
+      kebriaSampleAudioRef.current.pause();
+      kebriaSampleAudioRef.current = null;
+      setIsPlayingKebriaSample(false);
+      setEngineNotice('RJ Kebria Reference MP3 paused · Ready for audiobook narration');
+      return;
+    }
+
+    stopAllAudio();
+    setIsPlaying(false);
+
+    try {
+      const sampleAudio = new Audio(RJ_KEBRIA_REFERENCE_AUDIO_PATH);
+      sampleAudio.muted = isMuted;
+      kebriaSampleAudioRef.current = sampleAudio;
+      setIsPlayingKebriaSample(true);
+      setEngineNotice(
+        'Playing RJ Kebria Reference Voice Sample (Voice_Model___RJ_Kebria__d6ddbc00.mp3)'
+      );
+
+      sampleAudio.onended = () => {
+        setIsPlayingKebriaSample(false);
+        kebriaSampleAudioRef.current = null;
+      };
+      sampleAudio.onerror = () => {
+        setIsPlayingKebriaSample(false);
+        kebriaSampleAudioRef.current = null;
+      };
+
+      sampleAudio.play().catch(() => {
+        setIsPlayingKebriaSample(false);
+        kebriaSampleAudioRef.current = null;
+      });
+    } catch {
+      setIsPlayingKebriaSample(false);
+    }
+  }, [isPlayingKebriaSample, isMuted, stopAllAudio]);
 
   // Start warm Santiniketan Tanpura acoustic harmonic drone via Web Audio API
   const startTanpuraDrone = useCallback(() => {
@@ -485,7 +535,7 @@ export default function BanglaGranthaApp() {
       setIsLoadingAudio(true);
       setEngineNotice(
         lang === 'bn'
-          ? `স্বাভাবিক বাংলা পুরুষ কণ্ঠে পাঠ প্রস্তুত হচ্ছে · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
+          ? `${preset.labelBn} কণ্ঠে পাঠ প্রস্তুত হচ্ছে · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
           : `Synthesizing ${preset.labelEn} Narration · Ch ${chNumber}, Passage 0${paraIdx + 1}...`
       );
 
@@ -524,7 +574,7 @@ export default function BanglaGranthaApp() {
 
           setEngineNotice(
             lang === 'bn'
-              ? `বাংলা পুরুষ কণ্ঠ (Generic Bangla Male Voice) · Ch ${chNumber}, Passage 0${paraIdx + 1}`
+              ? `${preset.labelBn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
               : `Storyteller: ${preset.labelEn} · Ch ${chNumber}, Passage 0${paraIdx + 1}`
           );
 
@@ -2371,26 +2421,91 @@ export default function BanglaGranthaApp() {
                   </div>
                 </div>
 
-                {/* WEBSITE STORYTELLER VOICE: AI4BHARAT / INDIC-TTS */}
-                <div className="mt-4 pt-3 border-t border-white/10 relative z-10">
-                  <div className="flex items-center justify-between">
+                {/* WEBSITE STORYTELLER VOICE: RJ KEBRIA REPLICATED VOICE MODEL */}
+                <div className="mt-4 pt-3 border-t border-white/10 relative z-10 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold">
-                        Voice Artist · AI4Bharat Indic-TTS
+                      <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Replicated Voice Model · 108Hz Baritone
                       </p>
                       <p className="text-xs font-semibold text-white font-[family-name:var(--font-bengali)] mt-0.5">
-                        বাংলা পুরুষ কণ্ঠশিল্পী (Male Bengali Narrator)
+                        {BARITONE_VOICE_PRESETS[narratorPersona]?.labelBn}
                       </p>
                     </div>
-                    {activeBook.id !== 'apadartho-satyajit-ray' && (
-                      <button
-                        type="button"
-                        onClick={() => selectBook(CURATED_BENGALI_BOOKS[0], true, false, 'bn')}
-                        className="px-2.5 py-1.5 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 rounded-lg transition-colors whitespace-nowrap font-[family-name:var(--font-bengali)]"
-                      >
-                        অগ্নি · অপদার্থ
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={toggleKebriaReferenceSample}
+                      className={`px-2.5 py-1.5 text-[10px] font-semibold rounded-lg transition-all whitespace-nowrap flex items-center gap-1 ${
+                        isPlayingKebriaSample
+                          ? 'bg-emerald-500 text-stone-950 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                          : 'text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20'
+                      }`}
+                    >
+                      {isPlayingKebriaSample ? (
+                        <>
+                          <Pause className="w-3 h-3 fill-stone-950" />
+                          <span>Stop Ref MP3</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3 fill-amber-300" />
+                          <span>RJ Kebria Ref MP3</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* RJ Kebria Tone & Style Selector */}
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNarratorPersona('deep-baritone');
+                        if (isPlaying) {
+                          startPlayback(activeParagraphIdx, audioLangMode, activeChapterIdx, activeBook);
+                        }
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                        narratorPersona === 'deep-baritone'
+                          ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                          : 'text-stone-300 hover:text-white'
+                      }`}
+                    >
+                      কিবরিয়া · জীবন গল্প
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNarratorPersona('resonant-bass');
+                        if (isPlaying) {
+                          startPlayback(activeParagraphIdx, audioLangMode, activeChapterIdx, activeBook);
+                        }
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                        narratorPersona === 'resonant-bass'
+                          ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                          : 'text-stone-300 hover:text-white'
+                      }`}
+                    >
+                      রাতের রেডিও (FM)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNarratorPersona('warm-storyteller');
+                        if (isPlaying) {
+                          startPlayback(activeParagraphIdx, audioLangMode, activeChapterIdx, activeBook);
+                        }
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-all font-[family-name:var(--font-bengali)] truncate ${
+                        narratorPersona === 'warm-storyteller'
+                          ? 'bg-amber-500 text-stone-950 font-semibold shadow-xs'
+                          : 'text-stone-300 hover:text-white'
+                      }`}
+                    >
+                      সাহিত্য পাঠ
+                    </button>
                   </div>
                 </div>
 
@@ -3284,6 +3399,15 @@ export default function BanglaGranthaApp() {
         }}
         totalBookPassages={totalBookPassages}
         currentGlobalPassageIdx={currentGlobalPassageIdx}
+        narratorPersona={narratorPersona}
+        onSelectNarratorPersona={(persona) => {
+          setNarratorPersona(persona);
+          if (isPlaying) {
+            startPlayback(activeParagraphIdx, audioLangMode, activeChapterIdx, activeBook);
+          }
+        }}
+        isPlayingKebriaSample={isPlayingKebriaSample}
+        onToggleKebriaSample={toggleKebriaReferenceSample}
       />
     </div>
   );

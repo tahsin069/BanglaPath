@@ -15,6 +15,7 @@ import {
   DirectedNarrationSegment,
   preserveAuthenticBangladeshiText,
 } from '@/lib/bengali-narration-director';
+import { RJ_KEBRIA_VOICE_MODELS, RJKebriaVoiceStyle } from '@/lib/rj-kebria-voice-model';
 
 /**
  * Ported from `AI4Bharat/Indic-TTS/inference/server.py`
@@ -504,6 +505,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
   text: string;
   lang: 'bn' | 'en';
   preferCloudGradio?: boolean;
+  kebriaStyle?: RJKebriaVoiceStyle;
 }): Promise<{
   audioBase64: string;
   mimeType: string;
@@ -518,7 +520,9 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
     setupScript: string;
   };
 } | null> {
-  const { text, lang, preferCloudGradio = false } = options;
+  const { text, lang, preferCloudGradio = false, kebriaStyle = 'rj-kebria-jibon-golpo' } = options;
+  const kebriaModel =
+    RJ_KEBRIA_VOICE_MODELS[kebriaStyle] || RJ_KEBRIA_VOICE_MODELS['rj-kebria-jibon-golpo'];
 
   // Step 1: Prepare structured narration segments via Bengali Audiobook Narration Director
   // Preserves 100% of original wording & natural Bengali punctuation (zero rewriting/summarization)
@@ -554,18 +558,18 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
     }
   }
 
-  // Step 4: High-Speed Directed Bangladeshi Bengali Male Voice Artist Synthesis (`bn-BD-PradeepNeural`)
+  // Step 4: RJ Kebria Replicated Voice Model Synthesis (`bn-BD-PradeepNeural` + RJ Kebria Prosody Contour)
   if (lang === 'bn') {
     const bnMaleArtists: Array<{ voiceName: string; locale: string; label: string }> = [
       {
         voiceName: 'bn-BD-PradeepNeural',
         locale: 'bn-BD',
-        label: 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Bangladeshi Male Artist)',
+        label: kebriaModel.nameBn,
       },
       {
         voiceName: 'bn-IN-BashkarNeural',
         locale: 'bn-IN',
-        label: 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Bashkar Male Artist)',
+        label: `${kebriaModel.nameBn} (Bashkar Resonance)`,
       },
     ];
 
@@ -575,6 +579,9 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           text: authenticText,
           voiceName: artist.voiceName,
           locale: artist.locale,
+          pitch: kebriaModel.ssmlPitch,
+          rate: kebriaModel.ssmlRate,
+          volume: kebriaModel.ssmlVolume,
         });
 
         return {
@@ -582,7 +589,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           mimeType: 'audio/mpeg',
           lang: 'bn',
           voiceName: artist.label,
-          engine: 'ai4bharat-indic-tts-bengali-male-artist',
+          engine: `rj-kebria-replicated-model-${kebriaModel.modelId}`,
           normalizedText: authenticText,
           directedSegments,
           batchSynthesisSpec,
@@ -596,12 +603,12 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
       {
         voiceName: 'en-US-BrianMultilingualNeural',
         locale: 'en-US',
-        label: 'AI4Bharat Indic-TTS · Male Storyteller (EN)',
+        label: kebriaModel.nameEn,
       },
       {
         voiceName: 'en-GB-RyanNeural',
         locale: 'en-GB',
-        label: 'AI4Bharat Indic-TTS · Male Storyteller (EN-GB)',
+        label: `${kebriaModel.nameEn} (Studio Baritone)`,
       },
     ];
 
@@ -611,6 +618,9 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           text: authenticText,
           voiceName: artist.voiceName,
           locale: artist.locale,
+          pitch: kebriaModel.ssmlPitch,
+          rate: kebriaModel.ssmlRate,
+          volume: kebriaModel.ssmlVolume,
         });
 
         return {
@@ -618,7 +628,7 @@ export async function synthesizeWithAI4BharatIndicTTS(options: {
           mimeType: 'audio/mpeg',
           lang: 'en',
           voiceName: artist.label,
-          engine: 'ai4bharat-indic-tts-english-male-artist',
+          engine: `rj-kebria-replicated-model-${kebriaModel.modelId}-en`,
           normalizedText: authenticText,
           directedSegments,
           batchSynthesisSpec,

@@ -379,11 +379,21 @@ export function buildDirectedBanglaSSML(options: {
   text: string;
   voiceName: string;
   locale: string;
+  pitch?: string;
+  rate?: string;
+  volume?: string;
 }): {
   ssml: string;
   segments: DirectedNarrationSegment[];
 } {
-  const { text, voiceName, locale } = options;
+  const {
+    text,
+    voiceName,
+    locale,
+    pitch = '-4Hz',
+    rate = '-5%',
+    volume = '+5%',
+  } = options;
   const lang: 'bn' | 'en' = locale.toLowerCase().startsWith('bn') ? 'bn' : 'en';
   const segments = directBengaliLiteraryPassage(text, lang);
 
@@ -398,7 +408,7 @@ export function buildDirectedBanglaSSML(options: {
 
   const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${locale}">
                 <voice name="${voiceName}">
-                    <prosody pitch="+0Hz" rate="+0%" volume="+0%">
+                    <prosody pitch="${pitch}" rate="${rate}" volume="${volume}">
                         ${xmlSafeText}
                     </prosody>
                 </voice>

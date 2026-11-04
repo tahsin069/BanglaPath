@@ -6,10 +6,16 @@
  * that guarantees a male Bangla voice across every platform and browser on the internet.
  */
 
+import {
+  attachRJKebriaBroadcastMasteringChain,
+  RJKebriaVoiceStyle,
+} from '@/lib/rj-kebria-voice-model';
+
 export type MaleNarratorPersona = 'deep-baritone' | 'warm-storyteller' | 'resonant-bass';
 
 export interface BaritoneVoicePreset {
   id: MaleNarratorPersona;
+  kebriaStyle: RJKebriaVoiceStyle;
   labelEn: string;
   labelBn: string;
   /** Generic Bengali Male Neural Voice */
@@ -33,21 +39,22 @@ export interface BaritoneVoicePreset {
 
 const GENERIC_BANGLA_MALE_PRESET: BaritoneVoicePreset = {
   id: 'deep-baritone',
-  labelEn: 'AI4Bharat Indic-TTS · Bengali Male Artist',
-  labelBn: 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী',
+  kebriaStyle: 'rj-kebria-jibon-golpo',
+  labelEn: 'RJ Kebria · Jibon Golpo Intimate Storyteller',
+  labelBn: 'আরজে কিবরিয়া · জীবন গল্প (RJ Kebria Voice Model)',
   neuralVoiceBn: 'bn-BD-PradeepNeural',
   localeBn: 'bn-BD',
   neuralVoiceEn: 'en-US-BrianMultilingualNeural',
   localeEn: 'en-US',
-  neuralRate: '+0%',
-  neuralPitch: '+0Hz',
+  neuralRate: '-5%',
+  neuralPitch: '-4Hz',
   isPoetic: false,
   elevenLabsVoiceId: 'nPczCjzI2devNBz1zQrb',
   geminiVoice: 'Charon',
   descriptionEn:
-    'Natural Bengali male voice artist powered by AI4Bharat Indic-TTS normalization & synthesis.',
-  browserPitch: 0.6,
-  baseTempoMultiplier: 0.94,
+    'Replicated RJ Kebria warm Bangladeshi baritone voice model (108 Hz fundamental, Dhaka FM studio condenser intimacy).',
+  browserPitch: 0.62,
+  baseTempoMultiplier: 0.93,
 };
 
 export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePreset> = {
@@ -55,13 +62,25 @@ export const BARITONE_VOICE_PRESETS: Record<MaleNarratorPersona, BaritoneVoicePr
   'warm-storyteller': {
     ...GENERIC_BANGLA_MALE_PRESET,
     id: 'warm-storyteller',
-    neuralVoiceBn: 'bn-IN-BashkarNeural',
-    localeBn: 'bn-IN',
+    kebriaStyle: 'rj-kebria-literary',
+    labelEn: 'RJ Kebria · Classic Literary Narrator',
+    labelBn: 'আরজে কিবরিয়া · ধ্রুপদী সাহিত্য পাঠ (Classic Audiobook)',
+    neuralRate: '-3%',
+    neuralPitch: '-3Hz',
+    browserPitch: 0.65,
+    baseTempoMultiplier: 0.95,
   },
   'resonant-bass': {
     ...GENERIC_BANGLA_MALE_PRESET,
     id: 'resonant-bass',
+    kebriaStyle: 'rj-kebria-late-night',
+    labelEn: 'RJ Kebria · Late-Night FM Deep Baritone',
+    labelBn: 'আরজে কিবরিয়া · রাতের রেডিও (Late-Night Deep Baritone)',
+    neuralRate: '-8%',
+    neuralPitch: '-6Hz',
     isPoetic: true,
+    browserPitch: 0.56,
+    baseTempoMultiplier: 0.9,
   },
 };
 
@@ -240,8 +259,10 @@ export async function playBaritoneMasteredAudio(options: {
   onError: () => void;
 }): Promise<{ stop: () => void }> {
   const {
+    audioCtx,
     audioBase64,
     mimeType = 'audio/mpeg',
+    persona,
     playbackSpeed,
     isMuted,
     onEnded,
@@ -259,15 +280,26 @@ export async function playBaritoneMasteredAudio(options: {
   const blobUrl = URL.createObjectURL(blob);
 
   const audio = new Audio(blobUrl);
+  audio.crossOrigin = 'anonymous';
   (audio as unknown as { preservesPitch: boolean }).preservesPitch = true;
   (audio as unknown as { mozPreservesPitch: boolean }).mozPreservesPitch = true;
   (audio as unknown as { webkitPreservesPitch: boolean }).webkitPreservesPitch = true;
   audio.playbackRate = playbackSpeed;
   audio.muted = isMuted;
 
+  const preset = BARITONE_VOICE_PRESETS[persona] || BARITONE_VOICE_PRESETS['deep-baritone'];
+  const detachMasteringChain = attachRJKebriaBroadcastMasteringChain(
+    audio,
+    audioCtx,
+    preset.kebriaStyle
+  );
+
   let stoppedManually = false;
 
   const cleanup = () => {
+    if (detachMasteringChain) {
+      detachMasteringChain();
+    }
     URL.revokeObjectURL(blobUrl);
   };
 

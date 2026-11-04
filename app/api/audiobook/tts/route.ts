@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { BARITONE_VOICE_PRESETS, MaleNarratorPersona } from '@/lib/baritone-audio-engine';
 import { synthesizeWithAI4BharatIndicTTS } from '@/lib/ai4bharat-indic-tts';
+import { RJ_KEBRIA_VOICE_MODELS, RJKebriaVoiceStyle } from '@/lib/rj-kebria-voice-model';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -97,15 +98,16 @@ async function synthesizeElevenLabsMaleVoice(
 async function synthesizeGeminiMaleVoice(
   text: string,
   lang: 'bn' | 'en',
-  geminiVoice: 'Charon' | 'Fenrir' | 'Puck'
+  geminiVoice: 'Charon' | 'Fenrir' | 'Puck',
+  kebriaStyle: RJKebriaVoiceStyle = 'rj-kebria-jibon-golpo'
 ): Promise<string | null> {
   if (!process.env.GEMINI_API_KEY) return null;
 
   try {
+    const kebriaModel =
+      RJ_KEBRIA_VOICE_MODELS[kebriaStyle] || RJ_KEBRIA_VOICE_MODELS['rj-kebria-jibon-golpo'];
     const stylePrompt =
-      lang === 'bn'
-        ? 'Warm, natural, soothing Bengali male audiobook storyteller with clear standard Bangla pronunciation and calm literary pacing'
-        : 'Warm, natural, soothing deep male audiobook storyteller with calm literary pacing';
+      lang === 'bn' ? kebriaModel.geminiStylePromptBn : kebriaModel.geminiStylePromptEn;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash-lite-tts',
@@ -162,14 +164,18 @@ export async function POST(req: NextRequest) {
     const validPersona: MaleNarratorPersona =
       persona in BARITONE_VOICE_PRESETS ? (persona as MaleNarratorPersona) : 'deep-baritone';
     const preset = BARITONE_VOICE_PRESETS[validPersona];
+    const kebriaModel =
+      RJ_KEBRIA_VOICE_MODELS[preset.kebriaStyle] ||
+      RJ_KEBRIA_VOICE_MODELS['rj-kebria-jibon-golpo'];
 
     // =========================================================================
-    // PRIMARY NARRATOR: AI4Bharat Indic-TTS (`https://github.com/AI4Bharat/Indic-TTS`)
-    // Runs AI4Bharat Indic-TTS TextNormalizer + ParagraphHandler + Male Voice Artist
+    // PRIMARY NARRATOR: RJ Kebria Replicated Voice Model + AI4Bharat Indic-TTS
+    // Runs TextNormalizer + ParagraphHandler + RJ Kebria Baritone Prosody Contour
     // =========================================================================
     const indicTtsResult = await synthesizeWithAI4BharatIndicTTS({
       text,
       lang: targetLang,
+      kebriaStyle: preset.kebriaStyle,
     });
 
     if (indicTtsResult) {
@@ -184,19 +190,21 @@ export async function POST(req: NextRequest) {
     }
 
     // =========================================================================
-    // SECONDARY FALLBACK: Gemini 3.8 Male TTS (`Charon`) over HTTPS REST
+    // SECONDARY FALLBACK: Gemini 3.8 Male TTS (`Charon`) with RJ Kebria Style
     // =========================================================================
-    const geminiWavBase64 = await synthesizeGeminiMaleVoice(text, targetLang, preset.geminiVoice);
+    const geminiWavBase64 = await synthesizeGeminiMaleVoice(
+      text,
+      targetLang,
+      preset.geminiVoice,
+      preset.kebriaStyle
+    );
     if (geminiWavBase64) {
       return NextResponse.json({
         audioBase64: geminiWavBase64,
         mimeType: 'audio/wav',
         lang: targetLang,
-        voiceName:
-          targetLang === 'bn'
-            ? 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Male Voice Artist)'
-            : 'AI4Bharat Indic-TTS · Male Storyteller (EN)',
-        engine: 'gemini-3.8-flash-lite-tts-male',
+        voiceName: targetLang === 'bn' ? kebriaModel.nameBn : kebriaModel.nameEn,
+        engine: `rj-kebria-gemini-3.8-${kebriaModel.modelId}`,
       });
     }
 
@@ -212,11 +220,8 @@ export async function POST(req: NextRequest) {
         audioBase64: elevenLabsBase64,
         mimeType: 'audio/mpeg',
         lang: targetLang,
-        voiceName:
-          targetLang === 'bn'
-            ? 'AI4Bharat Indic-TTS · বাংলা পুরুষ কণ্ঠশিল্পী (Studio Male)'
-            : preset.labelEn,
-        engine: 'elevenlabs-multilingual-v2-male',
+        voiceName: targetLang === 'bn' ? kebriaModel.nameBn : kebriaModel.nameEn,
+        engine: `rj-kebria-elevenlabs-${kebriaModel.modelId}`,
       });
     }
 
